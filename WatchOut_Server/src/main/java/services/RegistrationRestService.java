@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
+import manager.PlayersRegistryManager;
 
 
 @Path("registration")
@@ -23,7 +24,7 @@ public class RegistrationRestService
         
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
             
-            Player player = new Player(endpoint);
+            Player player = new Player(endpoint, PlayersRegistryManager.generateRandomValidCoordinates());
             
             if(!registry.addPlayer(player))
             {
@@ -31,9 +32,7 @@ public class RegistrationRestService
             }
             else
             {
-                //set player initial coordinates
-                //to be completed
-                AddPlayerResponse response = new AddPlayerResponse(0, new int[] {0, 0}, new ArrayList<String>());
+                AddPlayerResponse response = new AddPlayerResponse(player.getId(), player.getPosition(), registry.getPlayersEndpoints());
                 return Response.ok(new Gson().toJson(response)).build();
             }
         }
@@ -45,39 +44,43 @@ public class RegistrationRestService
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 
-    @Path("get_players_HR")
+    @Path("get_players_hrs")
     @GET
     @Produces({"application/json", "application/xml"})
-    public Response getPlayersHR()
+    public Response getPlayersHRs()
     {
         try
         {
-            System.out.println("Invoked getPlayersHR");
+            System.out.println("Invoked getPlayersHRs");
         
-            //to be implemented
+            PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
+            
+            return Response.ok(new Gson().toJson(registry.getAllPlayerHRs())).build();
         }
         catch(Exception e)
         {
-            System.out.println("In getPlayersHR: " + e.getMessage());
+            System.out.println("In getPlayersHRs: " + e.getMessage());
         }
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
     
-    @Path("get_players")
+    @Path("get_players_endpoints")
     @GET
     @Produces({"application/json", "application/xml"})
-    public Response getPlayers()
+    public Response getPlayersEndpoints()
     {
         try
         {
-            System.out.println("Invoked getPlayers");
+            System.out.println("Invoked getPlayersEndpoints");
             
-            //to be implemented
+            PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
+            
+            return Response.ok(new Gson().toJson(registry.getPlayersEndpoints())).build();
         }
         catch(Exception e)
         {
-            System.out.println("In getPlayers: " + e.getMessage());
+            System.out.println("In getPlayersEndpoints: " + e.getMessage());
         }
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
