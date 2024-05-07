@@ -14,6 +14,9 @@ public class PlayersRegistryManager
     private static final int pitchLengthX = 10;
     private static final int pitchLengthY = 10;
     
+    private CustomLock players_lock;
+    private CustomLock playersHR_lock;
+    
     /**
      * <playerId, <tsDuration, <H.R. avgs>>>
      */
@@ -26,6 +29,8 @@ public class PlayersRegistryManager
     {
         this.registry = new HashMap<>();
         this.players = new ArrayList<>();
+        this.players_lock = new CustomLock();
+        this.playersHR_lock = new CustomLock();
     }
 
     /**
@@ -35,11 +40,16 @@ public class PlayersRegistryManager
      */
     public boolean addPlayer(Player player)
     {
+        playersHR_lock.Acquire();
         if (this.registry.containsKey(player.getId()))
             return false;
 
         this.registry.put(player.getId(), new HashMap<>());
+        playersHR_lock.Release();
+        
+        players_lock.Acquire();
         this.players.add(player);
+        players_lock.Release();
         
         System.out.println("Added player: " + player.getId());
 
@@ -54,6 +64,7 @@ public class PlayersRegistryManager
      */
     public boolean addPlayerHR(int playerId, SimpleEntry<Double, ArrayList<Double>> timestampedHR)
     {
+        playersHR_lock.Acquire();
         if (this.registry.containsKey(playerId))
             return false;
         
@@ -61,6 +72,7 @@ public class PlayersRegistryManager
         playerTimeStampedHR.put(timestampedHR.getKey(), timestampedHR.getValue());
         
         this.registry.put(playerId, playerTimeStampedHR);
+        playersHR_lock.Release();
         
         System.out.println("Added player HR: " + playerId + ", timestamp: " + timestampedHR);
          
@@ -74,10 +86,14 @@ public class PlayersRegistryManager
      */
     public HashMap<Double, ArrayList<Double>> getPlayerHRs(int playerId)
     {
+        playersHR_lock.Acquire();
         if (!this.registry.containsKey(playerId)) 
             return null;
-
-        return this.registry.get(playerId);
+        
+        HashMap playerHRs = this.registry.get(playerId);
+        playersHR_lock.Release();
+        
+        return playerHRs;
     }
     
     /**
@@ -86,7 +102,11 @@ public class PlayersRegistryManager
      */
     public HashMap<Integer, HashMap<Double, ArrayList<Double>>> getAllPlayerHRs()
     {
-        return this.registry;
+        playersHR_lock.Acquire();
+        HashMap reg = this.registry;
+        playersHR_lock.Release();
+        
+        return reg;
     }
     
     /**
@@ -95,11 +115,15 @@ public class PlayersRegistryManager
      */
     public ArrayList<String> getPlayersEndpoints()
     {
-        return new ArrayList<String>(
+        players_lock.Acquire();
+        ArrayList playerEP = new ArrayList<String>(
                 this.players.stream()
                             .map(player -> player.getEndpoint())
                             .collect(Collectors.toList())
         );
+        players_lock.Release();
+        
+        return playerEP;
     }
     
     /**
