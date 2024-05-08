@@ -10,10 +10,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * and open the template in the editor.
  */
 
-/**
- *
- * @author abdelrahman.sobh
- */
 @XmlRootElement
 public class AddPlayerResponse
 {

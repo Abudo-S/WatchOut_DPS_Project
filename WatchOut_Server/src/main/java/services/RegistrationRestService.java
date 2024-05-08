@@ -2,7 +2,6 @@ package services;
 
 import beans.*;
 import com.google.gson.Gson;
-import java.util.ArrayList;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -60,6 +59,27 @@ public class RegistrationRestService
         catch(Exception e)
         {
             System.out.println("In getPlayersHRs: " + e.getMessage());
+        }
+        
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+    }
+    
+    @Path("get_total_players_number")
+    @GET
+    @Produces({"application/json", "application/xml"})
+    public Response getTotalPlayersNumber()
+    {
+        try
+        {
+            System.out.println("Invoked getTotalPlayersNumber");
+            
+            PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
+            
+            return Response.ok(new Gson().toJson(registry.getPlayersEndpoints())).build();
+        }
+        catch(Exception e)
+        {
+            System.out.println("In getTotalPlayersNumber: " + e.getMessage());
         }
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();

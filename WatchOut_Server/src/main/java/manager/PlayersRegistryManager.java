@@ -18,9 +18,9 @@ public class PlayersRegistryManager
     private CustomLock playersHR_lock;
     
     /**
-     * <playerId, <tsDuration, <H.R. avgs>>>
+     * <playerId, <tsDuration, H.R.>>
      */
-    private HashMap<Integer, HashMap<Double, ArrayList<Double>>> registry;
+    private HashMap<Integer, HashMap<Double, Double>> registry;
     private ArrayList<Player> players;
 
     private static PlayersRegistryManager instance;
@@ -62,7 +62,7 @@ public class PlayersRegistryManager
      * @param timestampedHR
      * @return true if added, false otherwise
      */
-    public boolean addPlayerHR(int playerId, SimpleEntry<Double, ArrayList<Double>> timestampedHR)
+    public boolean addPlayerHR(int playerId, SimpleEntry<Double, Double> timestampedHR)
     {
         playersHR_lock.Acquire();
         if (this.registry.containsKey(playerId))
@@ -84,7 +84,7 @@ public class PlayersRegistryManager
      * @param playerId
      * @return single player HRs
      */
-    public HashMap<Double, ArrayList<Double>> getPlayerHRs(int playerId)
+    public HashMap<Double, Double> getPlayerHRs(int playerId)
     {
         playersHR_lock.Acquire();
         if (!this.registry.containsKey(playerId)) 
@@ -100,13 +100,26 @@ public class PlayersRegistryManager
      * 
      * @return all registered players HRs
      */
-    public HashMap<Integer, HashMap<Double, ArrayList<Double>>> getAllPlayerHRs()
+    public HashMap<Integer, HashMap<Double, Double>> getAllPlayerHRs()
     {
         playersHR_lock.Acquire();
         HashMap reg = this.registry;
         playersHR_lock.Release();
         
         return reg;
+    }
+    
+    /**
+     * 
+     * @return the length of List<players>
+     */
+    public int getTotalPlayersNumber()
+    {
+        players_lock.Acquire();
+        int player_num = this.players.size();
+        players_lock.Release();
+        
+        return player_num;
     }
     
     /**
@@ -140,7 +153,7 @@ public class PlayersRegistryManager
             int x = r.nextInt(pitchLengthX);
             int y = r.nextInt(pitchLengthY);
             boolean isValid = Arrays.stream(excludedHomeBaseCoordinates)
-                            .anyMatch(m -> !Arrays.equals(m, new int[] {x, y}));
+                                    .anyMatch(m -> !Arrays.equals(m, new int[] {x, y}));
             
             if(isValid)
                 return new int[] {x, y};
