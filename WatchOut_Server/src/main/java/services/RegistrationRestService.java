@@ -14,7 +14,7 @@ public class RegistrationRestService
 
     @Path("add_player")
     @POST
-    @Consumes({"application/json", "application/xml"})
+    @Consumes({"application/json"})
     public Response addPlayer(String endpoint)
     {
         try
@@ -43,30 +43,11 @@ public class RegistrationRestService
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
 
-    @Path("get_players_hrs")
-    @GET
-    @Produces({"application/json", "application/xml"})
-    public Response getPlayersHRs()
-    {
-        try
-        {
-            System.out.println("Invoked getPlayersHRs");
-        
-            PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
-            
-            return Response.ok(new Gson().toJson(registry.getAllPlayerHRs())).build();
-        }
-        catch(Exception e)
-        {
-            System.out.println("In getPlayersHRs: " + e.getMessage());
-        }
-        
-        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
-    }
+
     
     @Path("get_total_players_number")
     @GET
-    @Produces({"application/json", "application/xml"})
+    @Produces({"application/json"})
     public Response getTotalPlayersNumber()
     {
         try
@@ -75,7 +56,7 @@ public class RegistrationRestService
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
             
-            return Response.ok(new Gson().toJson(registry.getPlayersEndpoints())).build();
+            return Response.ok(new Gson().toJson(new TotalPlayersNumberResponse(registry.getTotalPlayersNumber()))).build();
         }
         catch(Exception e)
         {
@@ -87,7 +68,7 @@ public class RegistrationRestService
     
     @Path("get_players_endpoints")
     @GET
-    @Produces({"application/json", "application/xml"})
+    @Produces({"application/json"})
     public Response getPlayersEndpoints()
     {
         try

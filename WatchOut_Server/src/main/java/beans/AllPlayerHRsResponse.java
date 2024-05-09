@@ -1,9 +1,6 @@
 package beans;
 
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import javax.xml.bind.annotation.XmlRootElement;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -11,7 +8,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * and open the template in the editor.
  */
 
-@XmlRootElement
 public class AllPlayerHRsResponse
 {
     private HashMap<Integer, HashMap<Double, Double>> allPlayerHrs;

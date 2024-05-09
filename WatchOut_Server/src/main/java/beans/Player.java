@@ -1,10 +1,7 @@
 package beans;
 
 import java.util.Arrays;
-import javax.xml.bind.annotation.XmlRootElement;
 
-
-@XmlRootElement
 public class Player
 {
     private int id;
