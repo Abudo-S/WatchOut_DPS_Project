@@ -15,15 +15,15 @@ public abstract class RestPeriodicThread extends Thread
 {
     protected String serverAddress;
     protected Gson jsonSerializer;
-    protected int sleepMilliseconds;
     protected Client client;
+    protected int waitMilliseconds;
     
-    public RestPeriodicThread (Client client, String serverAddress, Gson jsonSerializer, int sleepMilliseconds)
+    public RestPeriodicThread (Client client, String serverAddress, Gson jsonSerializer, int waitMilliseconds)
     {
         this.client = client;
         this.serverAddress = serverAddress;
         this.jsonSerializer = jsonSerializer;
-        this.sleepMilliseconds = sleepMilliseconds;
+        this.waitMilliseconds = waitMilliseconds;
     }
 
     @Override

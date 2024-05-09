@@ -16,13 +16,13 @@ import manager.GameManager;
 public class CheckToStopGameThread extends RestPeriodicThread
 {
 
-    public CheckToStopGameThread (Client client, String serverAddress, Gson jsonSerializer, int sleepMilliseconds)
+    public CheckToStopGameThread (Client client, String serverAddress, Gson jsonSerializer, int waitMilliseconds)
     {
-       super(client, serverAddress, jsonSerializer, sleepMilliseconds);
+       super(client, serverAddress, jsonSerializer, waitMilliseconds);
     }
     
     @Override
-    public void run() 
+    public synchronized void run()
     {
         try
         {
@@ -50,8 +50,8 @@ public class CheckToStopGameThread extends RestPeriodicThread
                 if(result)
                     break;
                 
-                if (sleepMilliseconds > 0)
-                    Thread.sleep(sleepMilliseconds);
+                if (waitMilliseconds > 0)
+                    wait(waitMilliseconds);
             }
         }
         catch (Exception e)

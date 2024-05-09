@@ -11,17 +11,17 @@ public class SendCustomMsgToPlayersThread extends Thread
 {
     private String customMessage;
     private boolean keepPeriodic;
-    private int sleepMilliseconds;
+    private int waitMilliseconds;
     
-    public SendCustomMsgToPlayersThread (String customMessage, boolean keepPeriodic, int sleepMilliseconds)
+    public SendCustomMsgToPlayersThread (String customMessage, boolean keepPeriodic, int waitMilliseconds)
     {
         this.customMessage = customMessage;
         this.keepPeriodic = keepPeriodic;
-        this.sleepMilliseconds = sleepMilliseconds;
+        this.waitMilliseconds = waitMilliseconds;
     }
     
     @Override
-    public void run() 
+    public synchronized void run() 
     {
         try
         {
@@ -35,8 +35,8 @@ public class SendCustomMsgToPlayersThread extends Thread
                 if(result && !keepPeriodic)
                     break;
                 
-                if (sleepMilliseconds > 0)
-                    Thread.sleep(sleepMilliseconds);
+                if (waitMilliseconds > 0)
+                    wait(waitMilliseconds);
             }
         }
         catch (Exception e)
