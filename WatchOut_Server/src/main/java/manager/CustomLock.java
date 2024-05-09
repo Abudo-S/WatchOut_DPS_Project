@@ -27,7 +27,7 @@ public class CustomLock
             }
             catch(InterruptedException e) 
             {
-                System.out.println("In Acquire: " + e.getMessage());
+                System.err.println("In Acquire: " + e.getMessage());
             }
         }
         
@@ -36,7 +36,14 @@ public class CustomLock
 
     public synchronized void Release() 
     {
-        this.lockAcquired = false;
-        this.notify();
+        try
+        {
+            this.lockAcquired = false;
+            this.notify();
+        }
+        catch (IllegalMonitorStateException e)
+        {
+            System.err.println("In Release: " + e.getMessage());
+        }        
     }
 }
