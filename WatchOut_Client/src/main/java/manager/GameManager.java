@@ -50,9 +50,9 @@ public class GameManager
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
 
-            System.out.println(clientId + " Connecting Broker " + broker);
+            System.out.println(clientId + " - Connecting Broker " + broker);
             client.connect(connOpts);
-            System.out.println(clientId + " Connected");
+            System.out.println(clientId + " - Connected");
         }
         catch (MqttException mqttE) 
         {
@@ -70,7 +70,7 @@ public class GameManager
      * @param playersNum
      * @return true if game is started, so this method shouldn't be called again
      */
-    public boolean checkToStart(int playersNum) throws MqttException
+    public boolean checkToStart(int playersNum)
     {
         try
         {
@@ -91,9 +91,8 @@ public class GameManager
     }
     
     /**
-     * checks if a player's new-HR avg has exceeded the avg of its historical HR by the ratio of MinimumPlayerHRRatio_toStop.
-     * if so, then publish stop-game message through MQTT.
-     * @param playersNum
+     * checks if a player's new-HR avg has exceeded the avg of its historical HR by the ratio of MinimumPlayerHRRatio_toStop.if so, then publish stop-game message through MQTT.
+     * @param allPlayerHrs
      * @return true if game is stopped, so this method shouldn't be called again
      */
     public boolean checkToStop(HashMap<Integer, HashMap<Double, Double>> allPlayerHrs)
@@ -180,9 +179,9 @@ public class GameManager
             MqttMessage message = new MqttMessage(payload.getBytes());
             message.setQos(qos);
 
-            System.out.println(clientId + " Publishing message: " + payload + " ...");
+            System.out.println(clientId + " - Publishing message: " + payload + " ...");
             client.publish(topic, message);
-            System.out.println(clientId + " Message published");
+            System.out.println(clientId + " - Message published");
         }
         catch (MqttException mqttE) 
         {
