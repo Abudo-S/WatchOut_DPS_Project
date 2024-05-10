@@ -11,6 +11,34 @@ import manager.PlayersRegistryManager;
 @Path("heart_rate")
 public class HeartRateRestService 
 {
+    @Path("add_player_hrs")
+    @POST
+    @Consumes({"application/json"})
+    public Response addPlayerHrs(AddPlayerHrsRequest playerHrs)
+    {
+        try
+        {
+            System.out.println("Invoked addPlayerHrs with : " + playerHrs.toString());
+            
+            PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
+            
+            if(!registry.addPlayerHRs(playerHrs.getPlayerId(), playerHrs.getHrs()))
+            {
+                return Response.status(Response.Status.NOT_ACCEPTABLE).build();
+            }
+            else
+            {
+                return Response.ok().build();
+            }
+        }
+        catch(Exception e)
+        {
+            System.out.println("In addPlayerHrs: " + e.getMessage());
+        }
+        
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
+    }
+    
     
     @Path("get_players_hrs")
     @GET

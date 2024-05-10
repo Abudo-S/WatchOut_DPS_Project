@@ -20,7 +20,7 @@ public class PlayersRegistryManager
     /**
      * <playerId, <tsDuration, H.R.>>
      */
-    private HashMap<Integer, HashMap<Double, Double>> registry;
+    private HashMap<Integer, HashMap<Long, Double>> registry;
     private ArrayList<Player> players;
 
     private static PlayersRegistryManager instance;
@@ -74,7 +74,30 @@ public class PlayersRegistryManager
         this.registry.put(playerId, playerTimeStampedHR);
         playersHR_lock.Release();
         
-        System.out.println("Added player HR: " + playerId + ", timestamp: " + timestampedHR);
+        System.out.println("Added player HR, playerId: " + playerId + ", timestamp: " + timestampedHR);
+         
+        return true;
+    }
+    
+    /**
+     * appends a received player's HRs
+     * @param playerId
+     * @param timestampedHRs
+     * @return true if added, false otherwise
+     */
+    public boolean addPlayerHRs(int playerId, HashMap<Long, Double> timestampedHRs)
+    {
+        playersHR_lock.Acquire();
+        if (this.registry.containsKey(playerId))
+            return false;
+        
+        HashMap playerTimeStampedHR = this.registry.get(playerId);
+        playerTimeStampedHR.putAll(timestampedHRs);
+        
+        this.registry.put(playerId, playerTimeStampedHR);
+        playersHR_lock.Release();
+        
+        System.out.println("Added player HR, playerId: " + playerId);
          
         return true;
     }
@@ -84,7 +107,7 @@ public class PlayersRegistryManager
      * @param playerId
      * @return single player HRs
      */
-    public HashMap<Double, Double> getPlayerHRs(int playerId)
+    public HashMap<Long, Double> getPlayerHRs(int playerId)
     {
         playersHR_lock.Acquire();
         if (!this.registry.containsKey(playerId)) 
@@ -100,7 +123,7 @@ public class PlayersRegistryManager
      * 
      * @return all registered players HRs
      */
-    public HashMap<Integer, HashMap<Double, Double>> getAllPlayerHRs()
+    public HashMap<Integer, HashMap<Long, Double>> getAllPlayerHRs()
     {
         playersHR_lock.Acquire();
         HashMap reg = this.registry;
