@@ -10,14 +10,14 @@ import java.util.HashMap;
 
 public class AllPlayerHRsResponse
 {
-    private HashMap<Integer, HashMap<Double, Double>> allPlayerHrs;
+    private HashMap<Integer, HashMap<Long, Double>> allPlayerHrs;
 
-    public AllPlayerHRsResponse(HashMap<Integer, HashMap<Double, Double>> allPlayerHrs)
+    public AllPlayerHRsResponse(HashMap<Integer, HashMap<Long, Double>> allPlayerHrs)
     {
         this.allPlayerHrs = allPlayerHrs;
     }
 
-    public HashMap<Integer, HashMap<Double, Double>> getAllPlayerHrs()
+    public HashMap<Integer, HashMap<Long, Double>> getAllPlayerHrs()
     {
         return this.allPlayerHrs;
     }

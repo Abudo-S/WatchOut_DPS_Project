@@ -42,8 +42,6 @@ public class RegistrationRestService
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
-
-
     
     @Path("get_total_players_number")
     @GET
