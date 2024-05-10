@@ -5,17 +5,28 @@
  */
 package manager;
 
+import Threads.*;
+import java.util.ArrayList;
 import simulators.HRSimulator;
 
 public class SmartWatch
 {
-    private HRSimulatorBuffer hrBuffer;
+    private HRSimulator hrSimulator_thread;
+    private MonitorHrValuesThread monitorHrValues_thread;
+    private CheckToSendHrAvgsThread checkToSendHrAvgs_thread;
     
-    public SmartWatch(int playerId)
+    public SmartWatch(int playerId, CheckToSendHrAvgsThread checkToSendHrAvgs_thread)
     {
-        this.hrBuffer = new HRSimulatorBuffer();
-        HRSimulator hrSimulatorThread = new HRSimulator("Player_" + playerId, hrBuffer);
-        hrSimulatorThread.start();
+        this.checkToSendHrAvgs_thread = checkToSendHrAvgs_thread;
+        hrSimulator_thread = new HRSimulator("Player-" + playerId, new HRSimulatorBuffer());
+        monitorHrValues_thread = new MonitorHrValuesThread(0, hrSimulator_thread, this.checkToSendHrAvgs_thread);
+    
+        monitorHrValues_thread.start();
+    }
+    
+    public void stopSmartWatch()
+    {
+        monitorHrValues_thread.stopMeGently();
     }
     
 }
