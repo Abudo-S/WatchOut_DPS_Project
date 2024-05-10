@@ -27,7 +27,7 @@ public abstract class RestPeriodicThread extends Thread
     }
 
     @Override
-    public void run(){}
+    public abstract void run();
     
     protected ClientResponse performGetRequest(Client client, String url)
     {
