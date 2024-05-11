@@ -23,20 +23,23 @@ public class HRSimulatorBuffer implements Buffer
     
     /**
      * adds a measurement to loadedMeasurements.
-     * informs readAllAndClean of ready loadedMeasurements
+     * informs readAllAndClean of ready loadedMeasurements.
      * @param m 
      */
     @Override
-    public synchronized void addMeasurement(Measurement m) 
+    public synchronized void addMeasurement(Measurement m)
     {
         try
         {
+            //lock is needed here to guarantee that the list isn't modified
+            //during adding or size check that may influence subList op. in readAllAndClean
             loadedMeasurements_lock.Acquire();
             loadedMeasurements.add(m);
-            loadedMeasurements_lock.Release();
             
             if (loadedMeasurements.size() >= WINDOW_SIZE)
                 notify();
+            
+            loadedMeasurements_lock.Release();
         }
         catch(Exception e)
         {
@@ -61,9 +64,10 @@ public class HRSimulatorBuffer implements Buffer
                 wait();
             }
             
+            bufferedMeasurements = this.loadedMeasurements.subList(0, WINDOW_SIZE);
+            
             loadedMeasurements_lock.Acquire();
-            bufferedMeasurements = this.loadedMeasurements.subList(0, WINDOW_SIZE - 1);
-            this.loadedMeasurements = this.loadedMeasurements.subList(WINDOW_SIZE, loadedMeasurements.size() - 1);
+            this.loadedMeasurements = this.loadedMeasurements.subList(WINDOW_SIZE, loadedMeasurements.size());
             loadedMeasurements_lock.Release();
         }
         catch(Exception e)

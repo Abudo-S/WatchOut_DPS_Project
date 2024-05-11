@@ -5,23 +5,35 @@
  */
 package manager;
 
-import Threads.*;
-import java.util.ArrayList;
+import beans.Player;
+import threads.*;
 import simulators.HRSimulator;
 
+/**
+ * responsible of hr monitoring, coordination with other players through GRPC, like
+ * H.B. permission acquired, seeker election, H.B.-simultaneous reaching consensus
+ * @author Admin
+ */
 public class SmartWatch
 {
-    private HRSimulator hrSimulator_thread;
+    private Player player;
     private MonitorHrValuesThread monitorHrValues_thread;
-    private CheckToSendHrAvgsThread checkToSendHrAvgs_thread;
     
-    public SmartWatch(int playerId, CheckToSendHrAvgsThread checkToSendHrAvgs_thread)
+    public SmartWatch(Player player, CheckToSendHrAvgsThread checkToSendHrAvgs_thread)
     {
-        this.checkToSendHrAvgs_thread = checkToSendHrAvgs_thread;
-        hrSimulator_thread = new HRSimulator("Player-" + playerId, new HRSimulatorBuffer());
-        monitorHrValues_thread = new MonitorHrValuesThread(0, hrSimulator_thread, this.checkToSendHrAvgs_thread);
+        this.player = player;
+        HRSimulator hrSimulator_thread = new HRSimulator("Player-" + this.player.getId(), new HRSimulatorBuffer());
+        monitorHrValues_thread = new MonitorHrValuesThread(0, hrSimulator_thread, checkToSendHrAvgs_thread);
     
         monitorHrValues_thread.start();
+        
+        //inform all other player of the new player and update their position & status
+        //one thread for each other player
+    }
+    
+    public void startGameCoordination()
+    {
+        //start bully algorithm to select a seeker
     }
     
     public void stopSmartWatch()
