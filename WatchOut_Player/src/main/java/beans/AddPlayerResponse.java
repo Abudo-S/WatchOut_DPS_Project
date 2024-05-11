@@ -25,7 +25,7 @@ public class AddPlayerResponse
         this.playersEndpoints = playersEndpoints;
     }
 
-    public long getPlayerId()
+    public int getPlayerId()
     {
         return this.playerId;
     }

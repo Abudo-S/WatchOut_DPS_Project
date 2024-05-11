@@ -1,7 +1,7 @@
 package beans;
 
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
+import java.util.AbstractMap.*;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -12,9 +12,9 @@ import java.util.HashMap;
 public class AddPlayerHrsRequest
 {
     private int playerId;
-    private HashMap<Long, Double> hrs;
+    private SimpleEntry<Long, ArrayList<Double>> hrs;
 
-    public AddPlayerHrsRequest(int playerId, HashMap<Long, Double> hrs)
+    public AddPlayerHrsRequest(int playerId, SimpleEntry<Long, ArrayList<Double>> hrs)
     {
         this.playerId = playerId;
         this.hrs = hrs;
@@ -25,13 +25,14 @@ public class AddPlayerHrsRequest
         return this.playerId;
     }
     
-    public HashMap<Long, Double> getHrs()
+    public SimpleEntry<Long, ArrayList<Double>> getHrs()
     {
         return this.hrs;
     }
     
+    @Override
     public String toString()
     {
-        return "playerId: " + this.playerId + ", hrs: " + Arrays.toString(this.hrs.values().toArray());
+        return "playerId: " + this.playerId + "timestamp: " + this.hrs.getKey() + ", hrs: " + Arrays.toString(this.hrs.getValue().toArray());
     }
 }
