@@ -18,9 +18,9 @@ public class PlayersRegistryManager
     private CustomLock playersHR_lock;
     
     /**
-     * <playerId, <tsDuration, H.R.>>
+     * <playerId, <tsDuration, <HR_Avgs>>>
      */
-    private HashMap<Integer, HashMap<Long, Double>> registry;
+    private HashMap<Integer, HashMap<Long, ArrayList<Double>>> registry;
     private ArrayList<Player> players;
 
     private static PlayersRegistryManager instance;
@@ -74,7 +74,7 @@ public class PlayersRegistryManager
         this.registry.put(playerId, playerTimeStampedHR);
         playersHR_lock.Release();
         
-        System.out.println("Added player HR, playerId: " + playerId + ", timestamp: " + timestampedHR);
+        System.out.println("Added player HR, playerId: " + playerId + ", timestampedHH: " + timestampedHR);
          
         return true;
     }
@@ -85,14 +85,14 @@ public class PlayersRegistryManager
      * @param timestampedHRs
      * @return true if added, false otherwise
      */
-    public boolean addPlayerHRs(int playerId, HashMap<Long, Double> timestampedHRs)
+    public boolean addPlayerHRs(int playerId, SimpleEntry<Long, ArrayList<Double>> timestampedHRs)
     {
         playersHR_lock.Acquire();
         if (this.registry.containsKey(playerId))
             return false;
         
         HashMap playerTimeStampedHR = this.registry.get(playerId);
-        playerTimeStampedHR.putAll(timestampedHRs);
+        playerTimeStampedHR.put(timestampedHRs.getKey(), timestampedHRs.getValue());
         
         this.registry.put(playerId, playerTimeStampedHR);
         playersHR_lock.Release();
@@ -107,7 +107,7 @@ public class PlayersRegistryManager
      * @param playerId
      * @return single player HRs
      */
-    public HashMap<Long, Double> getPlayerHRs(int playerId)
+    public HashMap<Long, ArrayList<Double>> getPlayerHRs(int playerId)
     {
         playersHR_lock.Acquire();
         if (!this.registry.containsKey(playerId)) 
@@ -123,7 +123,7 @@ public class PlayersRegistryManager
      * 
      * @return all registered players HRs
      */
-    public HashMap<Integer, HashMap<Long, Double>> getAllPlayerHRs()
+    public HashMap<Integer, HashMap<Long, ArrayList<Double>>> getAllPlayerHRs()
     {
         playersHR_lock.Acquire();
         HashMap reg = this.registry;
@@ -153,10 +153,10 @@ public class PlayersRegistryManager
     {
         players_lock.Acquire();
         ArrayList playerEP = new ArrayList<String>(
-                this.players.stream()
-                            .map(player -> player.getEndpoint())
-                            .collect(Collectors.toList())
-        );
+                                    this.players.stream()
+                                                .map(player -> player.getEndpoint())
+                                                .collect(Collectors.toList())
+                            );
         players_lock.Release();
         
         return playerEP;

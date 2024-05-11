@@ -1,5 +1,6 @@
 package beans;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /*
@@ -10,14 +11,14 @@ import java.util.HashMap;
 
 public class AllPlayerHRsResponse
 {
-    private HashMap<Integer, HashMap<Long, Double>> allPlayerHrs;
+    private HashMap<Integer, HashMap<Long, ArrayList<Double>>> allPlayerHrs;
 
-    public AllPlayerHRsResponse(HashMap<Integer, HashMap<Long, Double>> allPlayerHrs)
+    public AllPlayerHRsResponse(HashMap<Integer, HashMap<Long, ArrayList<Double>>> allPlayerHrs)
     {
         this.allPlayerHrs = allPlayerHrs;
     }
 
-    public HashMap<Integer, HashMap<Long, Double>> getAllPlayerHrs()
+    public HashMap<Integer, HashMap<Long, ArrayList<Double>>> getAllPlayerHrs()
     {
         return this.allPlayerHrs;
     }
