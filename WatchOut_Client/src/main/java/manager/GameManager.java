@@ -95,7 +95,7 @@ public class GameManager
      * @param allPlayerHrs
      * @return true if game is stopped, so this method shouldn't be called again
      */
-    public boolean checkToStop(HashMap<Integer, HashMap<Double, Double>> allPlayerHrs)
+    public boolean checkToStop(HashMap<Integer, HashMap<Double, ArrayList<Double>>> allPlayerHrs)
     {
         try
         {
@@ -105,11 +105,11 @@ public class GameManager
                 
                 if (allPlayerHistoricalHrs.containsKey(playerId)) //check the two averages with respect to MinimumPlayerHRRatio_toStop
                 {
-                    HashMap historicalHrs = this.allPlayerHistoricalHrs.get(playerId);
+                    HashMap historicalTimestampedHrs = this.allPlayerHistoricalHrs.get(playerId);
                     
-                    double historicalHrRatio = (new ArrayList<Double>(historicalHrs.values())
-                                             .stream()
-                                             .mapToDouble(hr -> hr).sum()) / historicalHrs.values().size();
+                    double historicalHrRatio = (new ArrayList<Double>(historicalTimestampedHrs.values())
+                                                .stream()
+                                                .mapToDouble(hr -> hr).sum()) / historicalTimestampedHrs.values().size();
                     
                     double currentHrRatio = (new ArrayList<Double>(timestampedHrs.values())
                                              .stream()
