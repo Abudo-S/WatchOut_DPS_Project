@@ -9,6 +9,8 @@ package beans;
 public enum PlayerStatus 
 {
     Active,
+    Seeker, //assigned only to an elected seeker
+    Moving, //for acquired H.B. permission
     Safe,
     Tagged
 }
