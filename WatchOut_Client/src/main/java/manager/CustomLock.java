@@ -9,7 +9,7 @@ public class CustomLock
 {
     private volatile boolean lockAcquired = false;
     
-    CustomLock()
+    public CustomLock()
     {
         
     }
