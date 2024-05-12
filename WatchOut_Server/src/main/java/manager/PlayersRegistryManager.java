@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 
 public class PlayersRegistryManager 
 {
-    private static final int[][] excludedHomeBaseCoordinates = {{4, 4}, {4, 5}, {5, 5}, {5, 4}};
-    private static final int pitchLengthX = 10;
-    private static final int pitchLengthY = 10;
+    private static final int[][] HomeBaseCoordinates = {{4, 4}, {4, 5}, {5, 5}, {5, 4}};
+    private static final int PitchLengthX = 10;
+    private static final int PitchLengthY = 10;
     
     private CustomLock players_lock;
     private CustomLock playersHR_lock;
@@ -173,9 +173,9 @@ public class PlayersRegistryManager
 
         while(true)
         {
-            int x = r.nextInt(pitchLengthX);
-            int y = r.nextInt(pitchLengthY);
-            boolean isValid = Arrays.stream(excludedHomeBaseCoordinates)
+            int x = r.nextInt(PitchLengthX);
+            int y = r.nextInt(PitchLengthY);
+            boolean isValid = Arrays.stream(HomeBaseCoordinates)
                                     .anyMatch(m -> !Arrays.equals(m, new int[] {x, y}));
             
             if(isValid)
