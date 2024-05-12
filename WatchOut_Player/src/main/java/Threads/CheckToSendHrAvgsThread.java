@@ -3,13 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Threads;
+package threads;
 
 import beans.*;
 import com.google.gson.Gson;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
 import java.util.*;
+import java.util.AbstractMap.SimpleEntry;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
 import manager.*;
@@ -21,14 +22,18 @@ public class CheckToSendHrAvgsThread extends RestPeriodicThread
     private int playerId;
     private volatile boolean stopCondition = false;
     
-    private HashMap<Long, Double> reservedHrAvgs;
+    /**
+     * volatile helps to keep the size check updated
+     * <HR_Avgs>
+     */
+    private volatile List<Double> reservedHrAvgs;
     private CustomLock reservedHrAvgs_Lock;
 
     public CheckToSendHrAvgsThread (Client client, String serverAddress, Gson jsonSerializer, int waitMilliseconds, int playerId)
     {
        super(client, serverAddress, jsonSerializer, waitMilliseconds);
        this.playerId = playerId;
-       this.reservedHrAvgs = new HashMap();
+       this.reservedHrAvgs = new ArrayList();
     }
     
     @Override
@@ -38,40 +43,43 @@ public class CheckToSendHrAvgsThread extends RestPeriodicThread
         {
             while (!stopCondition)
             {
-                String url = serverAddress + RestServerSuffixes.ADD_PLAYER_HRS;
+                String url = serverAddress + RestServerSuffixes.POST_ADD_PLAYER_HRS;
                 
-                this.reservedHrAvgs_Lock.Acquire();
-                Set reservedHrAvgsKeys = reservedHrAvgs.keySet(); //used later to clean already sent hrs
-                AddPlayerHrsRequest addPlayerHrsRequest = new AddPlayerHrsRequest(this.playerId, reservedHrAvgs);
-                this.reservedHrAvgs_Lock.Release();
-                
-                //transmit player's hrs
-                ClientResponse clientResponse = this.performPostRequest(this.client, url, addPlayerHrsRequest);
-                
-                if (clientResponse == null)
+                if(reservedHrAvgs.size() > 0)
                 {
-                    System.out.println("In run: null response on " + url);
-                    continue;
-                }
-                
-                System.out.println("MonitorHrValuesThread: " + clientResponse.toString());
-
-                StatusType responseStatus = clientResponse.getStatusInfo();
-
-                //check if sent successfully 
-                if(responseStatus.getStatusCode() == Response.Status.OK.getStatusCode())
-                {
-                    //clean already sent hrs keys
                     this.reservedHrAvgs_Lock.Acquire();
-                    this.reservedHrAvgs.keySet().removeAll(reservedHrAvgsKeys);
+                    int reservedHrAvgsSize = reservedHrAvgs.size(); //used later to clean already sent hrs
+                    SimpleEntry timestampedHrAvgs = new SimpleEntry(System.currentTimeMillis(), this.reservedHrAvgs);
+                    AddPlayerHrsRequest addPlayerHrsRequest = new AddPlayerHrsRequest(this.playerId, timestampedHrAvgs);
                     this.reservedHrAvgs_Lock.Release();
-                    
-                    //apply required waiting time
-                    wait(HR_FREQ_TIME_TO_SERVER);
+
+                    //transmit player's hrs
+                    ClientResponse clientResponse = this.performPostRequest(this.client, url, addPlayerHrsRequest);
+
+                    if (clientResponse == null)
+                    {
+                        System.out.println("In run: null response on " + url);
+                        continue;
+                    }
+
+                    System.out.println("CheckToSendHrAvgsThread: " + clientResponse.toString());
+
+                    StatusType responseStatus = clientResponse.getStatusInfo();
+
+                    //check if sent successfully 
+                    if(responseStatus.getStatusCode() == Response.Status.OK.getStatusCode())
+                    {
+                        //clean already sent hrs averages
+                        this.reservedHrAvgs_Lock.Acquire();
+                        this.reservedHrAvgs = this.reservedHrAvgs.subList(0, reservedHrAvgsSize);
+                        this.reservedHrAvgs_Lock.Release();
+
+                        //apply required waiting time
+                        wait(HR_FREQ_TIME_TO_SERVER);
+                    }
+                    else
+                        System.err.println("Couldn't send player's hr avgs to the server with status: " + responseStatus);
                 }
-                else
-                    System.err.println("Couldn't send player's hr avgs to the server with status: " + responseStatus);
-                
                 
                 if (waitMilliseconds > 0)
                     wait(waitMilliseconds);
@@ -84,10 +92,10 @@ public class CheckToSendHrAvgsThread extends RestPeriodicThread
         }
     }
     
-    public void addToReservedHrAvg(Long timestamp, Double hrAvg)
+    public void addToReservedHrAvg(Double hrAvg)
     {
         this.reservedHrAvgs_Lock.Acquire();
-        this.reservedHrAvgs.put(timestamp, hrAvg);
+        this.reservedHrAvgs.add(hrAvg);
         this.reservedHrAvgs_Lock.Release();
     }
     

@@ -3,11 +3,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package Threads;
+package threads;
 
-import beans.*;
-import com.google.gson.Gson;
-import com.sun.jersey.api.client.Client;
 import java.util.*;
 import simulators.HRSimulator;
 import simulators.Measurement;
@@ -39,7 +36,7 @@ public class MonitorHrValuesThread extends Thread
                                                       .mapToDouble(m -> m.getValue())
                                                       .sum() / (double)measurements.size()) * 0.5;
                 
-                this.checkToSendHrAvgs_thread.addToReservedHrAvg(System.currentTimeMillis(), measurementsAvg);
+                this.checkToSendHrAvgs_thread.addToReservedHrAvg(measurementsAvg);
                 
                 if (waitMilliseconds > 0)
                     wait(waitMilliseconds);
