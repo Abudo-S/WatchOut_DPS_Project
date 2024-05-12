@@ -1,44 +1,103 @@
-///*
-// * To change this license header, choose License Headers in Project Properties.
-// * To change this template file, choose Tools | Templates
-// * and open the template in the editor.
-// */
-//package services;
-//
-//import io.grpc.stub.StreamObserver;
-//
-//public class PlayerGrpcService extends PlayerGrpcService.PlayerGrpcServiceBase
-//{
-//
-//    @Override
-//    public void simpleSum(SumServiceOuterClass.SimpleSumRequest request, StreamObserver<SumServiceOuterClass.SumServiceResponse> responseObserver){
-//        System.out.println(request);
-//
-//        SumServiceOuterClass.SumServiceResponse response = SumServiceOuterClass.SumServiceResponse.newBuilder()
-//                                                                .setRes(request.getA() + request.getB())
-//                                                                .build();
-//
-//        responseObserver.onNext(response);
-//        responseObserver.onCompleted();
-//    }
-//
-//    @Override
-//    public void repeatedSum(SumServiceOuterClass.RepeatedSumRequest request, StreamObserver<SumServiceOuterClass.SumServiceResponse> responseObserver){
-//        System.out.println(request);
-//
-//        for(int i = 1; i<request.getT()+1; i++) {
-//            SumServiceOuterClass.SumServiceResponse response = SumServiceOuterClass.SumServiceResponse.newBuilder()
-//                    .setRes(request.getN() * i)
-//                    .build();
-//
-//            responseObserver.onNext(response);
-//        }
-//
-//        responseObserver.onCompleted();
-//    }
-//
-//    @Override
-//    public StreamObserver<SumServiceOuterClass.SimpleSumRequest> streamSum(final StreamObserver<SumServiceOuterClass.SumServiceResponse> responseObserver){
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package services;
+
+import beans.Player;
+import beans.PlayerStatus;
+import io.grpc.stub.StreamObserver;
+import manager.SmartWatch;
+
+public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
+{
+
+    public void InformNewPlayer(PlayerServiceOuterClass.InformNewPlayerRequest request, StreamObserver<PlayerServiceOuterClass.InformNewPlayerResponse> responseObserver)
+    {
+        try
+        {
+            System.out.println("Invoked InformNewPlayer with request: " + request);
+        
+            SmartWatch smartWatch = SmartWatch.getSubsequentInstance();
+            Player player = smartWatch.getPlayer();
+            
+            //add new otherPlayer
+            player.upsertOtherPlayer(request.getNewPlayerEndpoint(),
+                    new Player(0, new int[] {request.getPositionX(), request.getPositionY()}, PlayerStatus.Active)
+            );
+            
+            smartWatch.updatePlayer(player);
+
+            //prepare response
+            PlayerServiceOuterClass.InformNewPlayerResponse response = PlayerServiceOuterClass.InformNewPlayerResponse.newBuilder()
+                                                                        .setPositionX(player.getPosition()[0])
+                                                                        .setPositionY(player.getPosition()[1])
+                                                                        .setStatus(player.getStatus().name())
+                                                                        .build();
+
+            //send messages
+            responseObserver.onNext(response);
+        }
+        catch (Exception e)
+        {
+            System.err.println("In InformNewPlayer: " + e.getMessage());
+        }
+        finally
+        {
+            //indicate termination
+            responseObserver.onCompleted();
+        }
+    }
+    
+    /**
+     * The current player compare its position with the remote player's position, if current-player position is closer to the H.B. then return false;
+     * if current-player position is equal and its id is higher then return false;
+     * otherwise return true.
+     * If this node is a seeker or its associated otherPlayers contains a seeker then return false anyway. (means that phase 0 is terminated)
+     * @param request
+     * @param responseObserver 
+     */
+    public void CanIbeSeekerRequest(PlayerServiceOuterClass.CanIbeSeekerRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
+        try
+        {
+            System.out.println("Invoked CanIbeSeekerRequest with request: " + request);
+        
+            Player currentPlayer = SmartWatch.getSubsequentInstance().getPlayer();
+            boolean isAgreed;
+            
+            if(currentPlayer.getStatus().equals(PlayerStatus.Seeker) ||
+               currentPlayer.getOtherPlayers().values()
+                       .stream()
+                       .anyMatch(m -> m.getStatus().equals(PlayerStatus.Seeker)))
+            {
+                isAgreed = false;
+            }
+            else
+            {
+                isAgreed = currentPlayer.compareCloserDistanceToHB(new int[] {request.getPositionX(), request.getPositionY()}, request.getPlayerId());
+            }
+            
+            //prepare response
+            PlayerServiceOuterClass.GenericResultResponse response = PlayerServiceOuterClass.GenericResultResponse.newBuilder()
+                                                                        .setResult(isAgreed)
+                                                                        .build();
+
+            //send messages
+            responseObserver.onNext(response);
+        }
+        catch (Exception e)
+        {
+            System.err.println("In InformNewPlayer: " + e.getMessage());
+        }
+        finally
+        {
+            //indicate termination
+            responseObserver.onCompleted();
+        }
+    }
+
+//    public StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest> ChangePositionOrStatusStream(StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
 //        //it returns the stream that will be used by the clients to send messages.
 //        //the client will write on this stream
 //        return new StreamObserver<SumServiceOuterClass.SimpleSumRequest>() {
@@ -62,7 +121,7 @@
 //            }
 //        };
 //    }
-//
-//}
-//
-//
+
+}
+
+

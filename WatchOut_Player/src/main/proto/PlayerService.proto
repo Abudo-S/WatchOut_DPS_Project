@@ -1,0 +1,37 @@
+syntax = "proto3";
+package services;
+
+message InformNewPlayerRequest {
+    string newPlayerEndpoint = 1;
+    int32 positionX = 2;
+	int32 positionY = 3;
+}
+
+message InformNewPlayerResponse {
+    int32 positionX = 1;
+	int32 positionY = 2;
+	string status = 3;
+}
+
+message CanIbeSeekerRequest {
+    string senderEndpoint = 1;
+	int32 playerId = 2;
+	int32 positionX = 3;
+	int32 positionY = 4;
+}
+
+message ChangePositionOrStatusRequest {
+	int32 positionX = 1;
+	int32 positionY = 2;
+	string status = 3;
+}
+
+message GenericResultResponse {
+    bool result = 1;
+}
+
+service PlayerService {
+    rpc InformNewPlayer(InformNewPlayerRequest) returns (InformNewPlayerResponse);
+    rpc CanIbeSeeker (CanIbeSeekerRequest) returns (GenericResultResponse);
+    rpc ChangePositionOrStatusStream(stream ChangePositionOrStatusRequest) returns (GenericResultResponse);
+}
