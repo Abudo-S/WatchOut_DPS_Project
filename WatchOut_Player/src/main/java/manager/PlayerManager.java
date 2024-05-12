@@ -30,7 +30,6 @@ public class PlayerManager
     private static final String STOP_GAME = "STOP_GAME";
     private static final String SERVER_HOST = "localhost";
     private static final int SERVER_PORT = 1337;
-    private static String GrpcServiceEndpoint;
     
     private String broker;
     private String clientId;
@@ -44,10 +43,10 @@ public class PlayerManager
     
     private static PlayerManager instance;
     
-    public PlayerManager ()
+    public PlayerManager (String grpcServiceEndpoint)
     {
-        if(GrpcServiceEndpoint == null)
-            throw new NullPointerException("Can't initialize PlayerManager with null GrpcServiceEndpoint!");
+        if(grpcServiceEndpoint == null)
+            throw new NullPointerException("Can't initialize PlayerManager with null grpcServiceEndpoint!");
         
         this.broker = "tcp://localhost:1883";
         this.clientId = MqttClient.generateClientId();
@@ -59,7 +58,7 @@ public class PlayerManager
         Client client = Client.create();
         String serverAddress = "http://" + SERVER_HOST + ":" + SERVER_PORT + "/";
         
-        this.persistentPlayerReg_thread = new PersistentPlayerRegistrationThread(client, serverAddress, jsonSerializer, 0, GrpcServiceEndpoint);
+        this.persistentPlayerReg_thread = new PersistentPlayerRegistrationThread(client, serverAddress, jsonSerializer, 0, grpcServiceEndpoint);
         this.persistentPlayerReg_thread.start();
         
         checkAndStartSmartWatch(client, serverAddress, jsonSerializer);
@@ -80,7 +79,7 @@ public class PlayerManager
                 wait(1000);
             
             Player player = this.persistentPlayerReg_thread.getBuiltPlayer();
-            this.smartWatch = new SmartWatch(player, new CheckToSendHrAvgsThread(client, serverAddress, jsonSerializer, 0, player.getId()));
+            this.smartWatch = SmartWatch.getInstance(player, new CheckToSendHrAvgsThread(client, serverAddress, jsonSerializer, 0, player.getId()));
         }
         catch (Exception e)
         {
@@ -165,6 +164,7 @@ public class PlayerManager
     
     public void StopAll()
     {
+        System.out.println("Invoked StopAll!");
         this.smartWatch.stopSmartWatch();
     }
     
@@ -172,10 +172,10 @@ public class PlayerManager
      * singleton pattern
      * @return instance
      */
-    public static PlayerManager getInstance()
+    public static PlayerManager getInstance(String grpcServiceEndpoint)
     {
         if(instance == null)
-            instance = new PlayerManager();
+            instance = new PlayerManager(grpcServiceEndpoint);
         
         return instance;
     }
