@@ -2,10 +2,7 @@ package manager;
 
 import beans.Player;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PlayersRegistryManager 
@@ -20,7 +17,7 @@ public class PlayersRegistryManager
     /**
      * <playerId, <tsDuration, <HR_Avgs>>>
      */
-    private HashMap<Integer, HashMap<Long, ArrayList<Double>>> registry;
+    private volatile HashMap<Integer, HashMap<Long, ArrayList<Double>>> registry;
     private ArrayList<Player> players;
 
     private static PlayersRegistryManager instance;
@@ -132,6 +129,86 @@ public class PlayersRegistryManager
         return reg;
     }
     
+    public double getPlayerAvgNHrs(int playerId, int n)
+    {
+        double avg = 0;
+        
+        try
+        {
+            ArrayList<Long> sortedTimeStamps;
+            HashMap<Long, ArrayList<Double>> playerTimestampedHrs;
+            LinkedHashMap<Long, ArrayList<Double>> orderedTimestampedHrs = new LinkedHashMap();
+            
+            //take a copy of timeStamps
+            playersHR_lock.Acquire();
+            sortedTimeStamps = new ArrayList(this.registry.get(playerId).keySet());
+            playerTimestampedHrs = new HashMap(this.registry.get(playerId));
+            playersHR_lock.Release();
+            
+            int consideredSize = ((n) > sortedTimeStamps.size())? sortedTimeStamps.size() : n;  
+            Collections.sort(sortedTimeStamps, Collections.reverseOrder());
+            
+            playerTimestampedHrs.keySet()
+                                .stream()
+                                .forEach(k -> orderedTimestampedHrs.put(k, playerTimestampedHrs.get(k)));
+            
+            List<Double> limitedHrs = orderedTimestampedHrs.values()
+                                                           .stream()
+                                                           .flatMap(List::stream)
+                                                           .collect(Collectors.toList())
+                                                           .subList(0, consideredSize);
+            avg = limitedHrs.stream()
+                            .mapToDouble(m -> (double)m)
+                            .sum() / consideredSize;
+        }
+        catch (Exception e) 
+        {
+            System.out.println("In getPlayerAvgNHrs: " + e.getMessage());
+        }
+        
+        return avg;
+    }
+    
+    /**
+     * 
+     * @param playerId
+     * @param ts1 lower bound
+     * @param ts2 upper bound
+     * @return 
+     */
+    public double getPlayerAvgTimestampedHrs(int playerId, long ts1, long ts2)
+    {
+        double avg = 0;
+        
+        try
+        {
+            ArrayList<Long> timeStamps;
+            
+            //take a copy of timeStamps
+            playersHR_lock.Acquire();
+            timeStamps = new ArrayList(this.registry.get(playerId).keySet());
+            playersHR_lock.Release();
+            
+            List<Double> boundedHrs = timeStamps.stream()
+                                                .filter(f -> f >= ts1 && f <= ts2)
+                                                .map(m -> this.registry.get(m))
+                                                .collect(Collectors.toList())
+                                                .stream()
+                                                .flatMap(List<Double>::stream)
+                                                .collect(Collectors.toList());
+              
+            avg = boundedHrs.stream()
+                            .mapToDouble(m -> (double)m)
+                            .sum() / boundedHrs.size();
+        }
+        catch (Exception e) 
+        {
+            System.out.println("In getPlayerAvgNHrs: " + e.getMessage());
+        }
+        
+        return avg;
+    }
+    
     /**
      * 
      * @return the length of List<players>
@@ -143,6 +220,20 @@ public class PlayersRegistryManager
         players_lock.Release();
         
         return player_num;
+    }
+    
+    /**
+     * 
+     * @return all current player
+     */
+    public ArrayList<Player> getAllPlayers()
+    {
+        ArrayList<Player> playerEP;
+        players_lock.Acquire();
+        playerEP = this.players;
+        players_lock.Release();
+        
+        return playerEP;
     }
     
     /**
