@@ -2,6 +2,9 @@ package services;
 
 import beans.*;
 import com.google.gson.Gson;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Response;
@@ -14,6 +17,7 @@ public class RegistrationRestService
 
     @Path("add_player")
     @POST
+    @Produces({"application/json"})
     @Consumes({"application/json"})
     public Response addPlayer(String endpoint)
     {
@@ -31,7 +35,10 @@ public class RegistrationRestService
             }
             else
             {
-                AddPlayerResponse response = new AddPlayerResponse(player.getId(), player.getPosition(), registry.getPlayersEndpoints());
+                ArrayList<String> playerEPs = registry.getPlayersEndpoints();
+                playerEPs.remove(endpoint);
+                
+                AddPlayerResponse response = new AddPlayerResponse(player.getId(), player.getPosition(), playerEPs);
                 return Response.ok(new Gson().toJson(response)).build();
             }
         }
@@ -64,22 +71,31 @@ public class RegistrationRestService
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
     
-    @Path("get_players_endpoints")
+    @Path("get_all_players")
     @GET
     @Produces({"application/json"})
-    public Response getPlayersEndpoints()
+    public Response getAllPlayers()
     {
         try
         {
-            System.out.println("Invoked getPlayersEndpoints");
+            System.out.println("Invoked getAllPlayers");
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
             
-            return Response.ok(new Gson().toJson(registry.getPlayersEndpoints())).build();
+            HashMap<Integer, AbstractMap.SimpleEntry<String, Integer[]>> compliantAllPlayers = new HashMap();
+            
+            ArrayList<Player> allPlayers = registry.getAllPlayers();
+            
+            for(Player p : allPlayers)
+            {
+                compliantAllPlayers.put(p.getId(), new AbstractMap.SimpleEntry(p.getEndpoint(), p.getPosition()));
+            }
+            
+            return Response.ok(new Gson().toJson(new GetAllPlayersResponse(compliantAllPlayers))).build();
         }
         catch(Exception e)
         {
-            System.out.println("In getPlayersEndpoints: " + e.getMessage());
+            System.out.println("In getAllPlayers: " + e.getMessage());
         }
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
