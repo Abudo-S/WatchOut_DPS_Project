@@ -12,9 +12,11 @@ public final class RestServerSuffixes
     
     //REGISTRATION
     public static final String GET_TOTAL_PLAYERS_NUMBER = REGISTRATION_SERVICE + "/get_total_players_number";
-    public static final String GET_PLAYERS_ENDPOINTS = REGISTRATION_SERVICE + "/get_players_endpoints";
+    public static final String GET_ALL_PLAYERS = REGISTRATION_SERVICE + "/get_all_players";
     
     //H.R.
+    public static final String getPlayerAvgNHrs = HEART_RATE_SERVICE + "/get_player_avg_n_hrs/{playerId}/{n}";
+    public static final String getPlayerAvgTimestampedHrs = HEART_RATE_SERVICE + "/get_player_avg_hrs/{playerId}/{ts1}/{ts2}";
     public static final String GET_PLAYERS_HRS = HEART_RATE_SERVICE + "/get_players_hrs";
     
 }
