@@ -33,18 +33,18 @@ public class HeartRateRestService
     }
     
     
-    @Path("get_player_avg_hrs/{playerId}/{ts1}/{ts2}")
+    @Path("get_player_avg_hrs/{ts1}/{ts2}")
     @GET
     @Produces({"application/json"})
-    public Response getPlayerAvgTimestampedHrs(int playerId, long ts1, long ts2)
+    public Response getPlayerAvgTimestampedHrs(long ts1, long ts2)
     {
         try
         {
-            System.out.println("Invoked getPlayerAvgTimestampedHrs with playerId: " + playerId + ", t1: " + ts1 + ", t2: " + ts2);
+            System.out.println("Invoked getPlayerAvgTimestampedHrs with t1: " + ts1 + ", t2: " + ts2);
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
 
-            return Response.ok(registry.getPlayerAvgTimestampedHrs(playerId, ts1, ts2)).build();
+            return Response.ok(registry.getTotalAvgTimestampedHrs(ts1, ts2)).build();
         }
         catch(Exception e)
         {

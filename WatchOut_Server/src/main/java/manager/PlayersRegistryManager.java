@@ -171,31 +171,32 @@ public class PlayersRegistryManager
     
     /**
      * 
-     * @param playerId
      * @param ts1 lower bound
      * @param ts2 upper bound
      * @return 
      */
-    public double getPlayerAvgTimestampedHrs(int playerId, long ts1, long ts2)
+    public double getTotalAvgTimestampedHrs(long ts1, long ts2)
     {
         double avg = 0;
         
         try
         {
-            ArrayList<Long> timeStamps;
+            HashMap<Long, ArrayList<Double>> timestampedHrs;
             
             //take a copy of timeStamps
             playersHR_lock.Acquire();
-            timeStamps = new ArrayList(this.registry.get(playerId).keySet());
+            timestampedHrs = new HashMap((Map) this.registry.values());
             playersHR_lock.Release();
             
-            List<Double> boundedHrs = timeStamps.stream()
-                                                .filter(f -> f >= ts1 && f <= ts2)
-                                                .map(m -> this.registry.get(m))
-                                                .collect(Collectors.toList())
-                                                .stream()
-                                                .flatMap(List<Double>::stream)
-                                                .collect(Collectors.toList());
+            
+            List<Double> boundedHrs = timestampedHrs.keySet()
+                                                    .stream()
+                                                    .filter(f -> f >= ts1 && f <= ts2)
+                                                    .map(m -> new ArrayList<Double>((Collection<? extends Double>) timestampedHrs.get(m)))
+                                                    .collect(Collectors.toList())
+                                                    .stream()
+                                                    .flatMap(List::stream)
+                                                    .collect(Collectors.toList());
               
             avg = boundedHrs.stream()
                             .mapToDouble(m -> (double)m)
