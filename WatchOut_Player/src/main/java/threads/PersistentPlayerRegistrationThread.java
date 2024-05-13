@@ -56,7 +56,6 @@ public class PersistentPlayerRegistrationThread extends RestPeriodicThread
                     this.builtPlayer = new Player(addPlayerResponse.getPlayerId(), addPlayerResponse.getPlayerCoordinates(), PlayerStatus.Active);
                     this.builtPlayer.addInitialOtherPlayers(addPlayerResponse.getplayersEndpoints());
                     
-                    this.isCompletedSuccessfully = true;
                     break;
                 }
                 else
@@ -70,6 +69,8 @@ public class PersistentPlayerRegistrationThread extends RestPeriodicThread
         {
             System.err.println("In run: " + e.getMessage());
         }
+        
+        this.isCompletedSuccessfully = true;
     }
     
     public Player getBuiltPlayer()

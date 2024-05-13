@@ -34,7 +34,7 @@ public class InformForNewEntryThread extends Thread
         {
             Player player = this.smartWatch.getPlayer();
             
-            //Plaintext channel on the address (ip/port) which offers the GreetingService service
+            //init grpc service client
             final ManagedChannel channel = ManagedChannelBuilder.forTarget(this.remotePlayerEndpoint).usePlaintext().build();
 
             PlayerServiceBlockingStub stub = PlayerServiceGrpc.newBlockingStub(channel);
@@ -47,17 +47,17 @@ public class InformForNewEntryThread extends Thread
 
             InformNewPlayerResponse response = stub.informNewPlayer(request);
 
+            player.AcquireOtherPlayerLock(request.getNewPlayerEndpoint());
             //add new otherPlayer
             player.upsertOtherPlayer(request.getNewPlayerEndpoint(),
                     new Player(0, new int[] {response.getPositionX(), response.getPositionY()}, PlayerStatus.valueOf(response.getStatus()))
             );
-            
-            smartWatch.updatePlayer(player);
+            player.ReleaseOtherPlayerLock(request.getNewPlayerEndpoint());
             
             //printing the answer
             //System.out.println(response.toString());
 
-            //closc the channel
+            //close the channel
             channel.shutdown();
         }
         catch(Exception e)
