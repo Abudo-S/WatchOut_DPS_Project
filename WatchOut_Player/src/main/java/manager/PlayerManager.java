@@ -79,6 +79,12 @@ public class PlayerManager
                 wait(1000);
             
             Player player = this.persistentPlayerReg_thread.getBuiltPlayer();
+            
+            if (player == null)
+            {
+                throw new NullPointerException("Can't get buildPlayer!");
+            }
+            
             this.smartWatch = SmartWatch.getInstance(player, new CheckToSendHrAvgsThread(client, serverAddress, jsonSerializer, 0, player.getId()));
         }
         catch (Exception e)

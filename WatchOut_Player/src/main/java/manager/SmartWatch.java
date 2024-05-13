@@ -6,12 +6,13 @@
 package manager;
 
 import beans.Player;
+import java.util.ArrayList;
 import java.util.Set;
 import threads.*;
 import simulators.HRSimulator;
 
 /**
- * responsible of hr monitoring, coordination with other players through GRPC, like
+ * responsible of H.R. monitoring, coordination with other players through GRPC, like
  * H.B. permission acquired, seeker election, H.B.-simultaneous reaching consensus
  * @author Admin
  */
@@ -37,7 +38,7 @@ public class SmartWatch
     }
     
     /**
-     * inform all other player of the new player and update their position & status
+     * inform all other players of the new player and update their position & status
      * one thread for each other player
      */
     private void informNewEntry()
@@ -62,9 +63,55 @@ public class SmartWatch
         }
     }
     
+    /**
+     * ask to be seeker from all other players; if all other players agree then this player is the seeker.
+     * one thread for each other player
+     * modified bully election
+     */
     public void startGameCoordination()
     {
-        //start bully algorithm to select a seeker
+        try
+        {    
+            ArrayList<AskToBeSeekerThread> gatheredThreads = new ArrayList();
+            Set<String> otherPlayersEndsPoints;
+
+            this.playerLock.Acquire();
+            otherPlayersEndsPoints = this.player.getOtherPlayers().keySet();
+            this.playerLock.Release();
+
+            for(String endpoint : otherPlayersEndsPoints)
+            {
+                AskToBeSeekerThread askToBeSeeker_thread = new AskToBeSeekerThread(endpoint, this);
+                askToBeSeeker_thread.start();
+                gatheredThreads.add(askToBeSeeker_thread);
+            }
+            
+            //We need to wait for all threads' results to determine current player's role
+            boolean resultsGathered = false;
+            while(!resultsGathered)
+            {
+                resultsGathered = !gatheredThreads.stream()
+                                                  .map(m -> m.checkIsCompleted())
+                                                  .anyMatch(m -> m.equals(false));
+            }
+            
+            boolean finalAgreedSeeker = !gatheredThreads.stream()
+                                                        .map(m -> m.getAgreementResult())
+                                                        .anyMatch(m -> m.equals(false));
+            
+            if(finalAgreedSeeker)
+            {
+                //start seeker thread
+            }
+            else
+            {
+                //start hider thread
+            }
+        }
+        catch(Exception e)
+        {
+            System.out.println("informNewEntry: " + e.getMessage());
+        }
     }
     
     public void stopSmartWatch()
@@ -72,12 +119,16 @@ public class SmartWatch
         monitorHrValues_thread.stopMeGently();
     }
     
-    public void updatePlayer(Player player)
-    {
-        this.playerLock.Acquire();
-        this.player = player;
-        this.playerLock.Release();
-    }
+    /**
+     * may cause write-write conflict
+     * @return 
+     */
+//    public void updatePlayer(Player player)
+//    {
+//        this.playerLock.Acquire();
+//        this.player = player;
+//        this.playerLock.Release();
+//    }
     
     public String getGrpcEndpoint()
     {
