@@ -21,13 +21,13 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
         
             SmartWatch smartWatch = SmartWatch.getSubsequentInstance();
             Player player = smartWatch.getPlayer();
-            
+
+            player.AcquireOtherPlayerLock(request.getNewPlayerEndpoint());
             //add new otherPlayer
             player.upsertOtherPlayer(request.getNewPlayerEndpoint(),
                     new Player(0, new int[] {request.getPositionX(), request.getPositionY()}, PlayerStatus.Active)
             );
-            
-            smartWatch.updatePlayer(player);
+            player.ReleaseOtherPlayerLock(request.getNewPlayerEndpoint());
 
             //prepare response
             PlayerServiceOuterClass.InformNewPlayerResponse response = PlayerServiceOuterClass.InformNewPlayerResponse.newBuilder()
@@ -97,30 +97,57 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
         }
     }
 
-//    public StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest> ChangePositionOrStatusStream(StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
-//        //it returns the stream that will be used by the clients to send messages.
-//        //the client will write on this stream
-//        return new StreamObserver<SumServiceOuterClass.SimpleSumRequest>() {
-//            //receiving a message from the client
-//            public void onNext(SumServiceOuterClass.SimpleSumRequest clientMessage) {
-//                System.out.println(clientMessage);
-//
-//                responseObserver.onNext(SumServiceOuterClass.SumServiceResponse.newBuilder()
-//                        .setRes(clientMessage.getA() + clientMessage.getB())
-//                        .build());
-//            }
-//
-//            //if there is an error (client abruptly disconnect) we remove the client.
-//            public void onError(Throwable throwable) {
-//
-//            }
-//
-//            //if the client explicitly terminated, we remove it from the hashset.
-//            public void onCompleted() {
-//
-//            }
-//        };
-//    }
+    public StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest> ChangePositionOrStatusStream(StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
+
+        //the client will write on this stream
+        return new StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest>() 
+        {
+            //receiving a message from the client
+            public void onNext(PlayerServiceOuterClass.ChangePositionOrStatusRequest clientMessage)
+            {
+                boolean result = false;
+                
+                try 
+                {
+                    System.out.println("Invoked CanIbeSeekerRequest with request: " + clientMessage);
+                    
+                    Player player = SmartWatch.getSubsequentInstance().getPlayer();
+                    
+                    player.AcquireOtherPlayerLock(clientMessage.getSenderEndpoint());
+                    Player otherPlayer = player.getOtherPlayer(clientMessage.getSenderEndpoint());
+                    
+                    //update otherPlayer data.
+                    otherPlayer.setStatus(PlayerStatus.valueOf(clientMessage.getStatus()));
+                    otherPlayer.setPosition(new int[] {clientMessage.getPositionX(), clientMessage.getPositionY()});
+                    
+                    player.upsertOtherPlayer(clientMessage.getSenderEndpoint(), otherPlayer);
+                    player.ReleaseOtherPlayerLock(clientMessage.getSenderEndpoint());
+                    
+                    result = true;
+                }
+                catch (Exception e) 
+                {
+                     System.err.println("In ChangePositionOrStatusStream: " + e.getMessage());
+                }
+                finally
+                {
+                    responseObserver.onNext(PlayerServiceOuterClass.GenericResultResponse.newBuilder()
+                                    .setResult(result)
+                                    .build());
+                }
+            }
+
+            public void onError(Throwable throwable) 
+            {
+
+            }
+
+            public void onCompleted() 
+            {
+
+            }
+        };
+    }
 
 }
 
