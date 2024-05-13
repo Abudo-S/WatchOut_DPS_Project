@@ -21,14 +21,20 @@ public class Player
      * <player's endpoint, player>
      */
     private volatile HashMap<String, Player> otherPlayers;
-    private CustomLock otherPlayersLock;
+    
+    /**
+     * used to synchronize operations on otherPlayers.
+     * it's reasonable that a lock on a player's op shouldn't influence other players ops
+     */
+    private volatile HashMap<String, CustomLock> otherPlayersLocks;
     
     public Player(int id, int[] position, PlayerStatus status)
     {
         this.id = id;
         this.position = position;
         this.status = status;
-        this.otherPlayersLock = new CustomLock();
+        this.otherPlayers = new HashMap();
+        this.otherPlayersLocks = new HashMap();
     }
     
     public void addInitialOtherPlayers(List<String> playersEndpoints)
@@ -37,24 +43,28 @@ public class Player
         {
             //suppose intially that other players are active
             this.otherPlayers.put(playerEndpoint, new Player(0, new int[] {0, 0}, PlayerStatus.Active));
+            //add related lock
+            this.otherPlayersLocks.put(playerEndpoint, new CustomLock());
         }
     }
     
     /**
-     * More correct approach is to have a lock for each otherPlayer, so updating two or more different players can occur concurrently.
-     * But for simplicity we can just use a lock for all otherPlayers
+     * otherPlayer's lock should be handled by method's caller
      * @param endpoint
      * @param player
      * @throws KeyException 
      */
     public void upsertOtherPlayer(String endpoint, Player player) throws KeyException
     {        
-        this.otherPlayersLock.Acquire();
         this.otherPlayers.put(endpoint, player);
-        this.otherPlayersLock.Release();
     }
     
-    /**
+    public void setPosition(int[] position)
+    {
+       this.position = position;
+    }
+    
+    /**{
      * used to update player's status subsequently
      * @param status 
      */
@@ -63,28 +73,25 @@ public class Player
        this.status = status;
     }
     
+    /**
+     * otherPlayer's lock should be handled by method's caller
+     * @param endpoint
+     * @return
+     * @throws KeyException 
+     */
     public Player getOtherPlayer(String endpoint) throws KeyException
     {
         if(!this.otherPlayers.containsKey(endpoint))
             throw new KeyException("Can't find player with endpoint: " + endpoint);
         
-        Player otherPlayer = null;
-
-        this.otherPlayersLock.Acquire();
-        otherPlayer = this.otherPlayers.get(endpoint);
-        this.otherPlayersLock.Release();
+        Player otherPlayer = this.otherPlayers.get(endpoint);
         
         return otherPlayer;
     }
     
     public HashMap<String, Player> getOtherPlayers()
     {
-        HashMap<String, Player> otherPlayers = null;
-        this.otherPlayersLock.Acquire();
-        otherPlayers = this.otherPlayers;
-        this.otherPlayersLock.Release();
-        
-        return otherPlayers;
+        return this.otherPlayers;
     }
     
     public PlayerStatus getStatus()
@@ -103,6 +110,36 @@ public class Player
     public int[] getPosition()
     {
         return this.position;
+    }
+    
+    public void AcquireOtherPlayerLock(String otherPlayerEndpoint) throws KeyException
+    {
+        if(!this.otherPlayersLocks.containsKey(otherPlayerEndpoint))
+            throw new KeyException("Can't find player lock with endpoint: " + otherPlayerEndpoint);
+        
+        this.otherPlayersLocks.get(otherPlayerEndpoint).Acquire();
+    }
+    
+    public void ReleaseOtherPlayerLock(String otherPlayerEndpoint) throws KeyException
+    {
+        if(!this.otherPlayersLocks.containsKey(otherPlayerEndpoint))
+            throw new KeyException("Can't find player lock with endpoint: " + otherPlayerEndpoint);
+        
+        this.otherPlayersLocks.get(otherPlayerEndpoint).Release();
+    }
+    
+     /**
+     * essentially used by the seeker.
+     * it calculates the euclidean distance between a player's position and another position.
+     * @param anotherPosition
+     * @return 
+     */
+    public double getDistanceToPosition(int[] anotherPosition)
+    {
+        if(anotherPosition.length != 2)
+            throw new NumberFormatException("Position's length sould be equal to 2!");
+        
+        return Math.sqrt(((this.position[0] - anotherPosition[0])^ 2 + (this.position[1] - anotherPosition[1]) ^ 2));
     }
     
     /**
@@ -134,7 +171,7 @@ public class Player
     
     /**
      * Can be used to calculated min distance to H.B from a player position.
-     * it gets the euclidean distance between a player's position and H.B. all points.
+     * it calculates the minimum euclidean distance between a player's position and H.B. all points.
      * @param playerPosition
      * @return 
      */
@@ -149,7 +186,7 @@ public class Player
         
         double playerMinDistance = Arrays.stream(IntStream.range(0, playerDiffPoints.length)
                                         .mapToDouble(m -> 
-                                            (Arrays.stream(playerDiffPoints[m]).sum() * 0.5)
+                                            Math.sqrt(Arrays.stream(playerDiffPoints[m]).sum())
                                         ).toArray()).min().getAsDouble();
         
         return playerMinDistance;
