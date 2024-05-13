@@ -59,7 +59,7 @@ public class PersistentPlayerRegistrationThread extends RestPeriodicThread
                     break;
                 }
                 else
-                    System.err.println("Couldn't send player's registration to the server with status: " + responseStatus);
+                    System.err.println("Couldn't process POST_ADD_PLAYER to the server with status: " + responseStatus);
                 
                 if (waitMilliseconds > 0)
                     wait(waitMilliseconds);
