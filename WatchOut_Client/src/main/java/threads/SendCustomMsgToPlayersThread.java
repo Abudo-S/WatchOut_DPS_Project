@@ -9,6 +9,7 @@ import manager.GameManager;
 
 public class SendCustomMsgToPlayersThread extends Thread
 {
+    protected volatile boolean isCompletedSuccessfully = false;
     private String customMessage;
     private boolean keepPeriodic;
     private int waitMilliseconds;
@@ -43,5 +44,12 @@ public class SendCustomMsgToPlayersThread extends Thread
         {
             System.err.println("In run: " + e.getMessage());
         }
+        
+        this.isCompletedSuccessfully = true;
+    }
+    
+    public boolean checkIsCompleted() 
+    {
+        return this.isCompletedSuccessfully;
     }
 }

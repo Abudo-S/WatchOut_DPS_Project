@@ -7,6 +7,7 @@ package beans;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.HashMap;
+import java.util.Map;
 
 
 public class GetAllPlayersResponse 
@@ -24,5 +25,17 @@ public class GetAllPlayersResponse
     public HashMap<Integer, SimpleEntry<String, Integer[]>> getPlayers()
     {
         return this.players;
+    }
+    
+    @Override
+    public String toString()
+    {
+        String str = "";
+        for(Map.Entry<Integer, SimpleEntry<String, Integer[]>> playerRecord: this.players.entrySet())
+        {
+            str += "playerId: " + playerRecord.getKey() + ", endpoint: " + playerRecord.getValue().getKey() + ", initialPosition: " + playerRecord.getValue().getValue()+ "\n";
+        }
+        
+        return str;
     }
 }

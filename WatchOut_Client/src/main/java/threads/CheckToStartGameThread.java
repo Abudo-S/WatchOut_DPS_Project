@@ -58,5 +58,7 @@ public class CheckToStartGameThread extends RestPeriodicThread
         {
             System.err.println("In run: " + e.getMessage());
         }
+        
+        this.isCompletedSuccessfully = true;
     }
 }

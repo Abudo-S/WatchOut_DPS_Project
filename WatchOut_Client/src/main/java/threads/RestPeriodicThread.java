@@ -13,6 +13,7 @@ import com.sun.jersey.api.client.WebResource;
 
 public abstract class RestPeriodicThread extends Thread
 {
+    protected volatile boolean isCompletedSuccessfully = false;
     protected String serverAddress;
     protected Gson jsonSerializer;
     protected Client client;
@@ -46,4 +47,9 @@ public abstract class RestPeriodicThread extends Thread
     }
     
     //add further rest method here
+    
+    public boolean checkIsCompleted() 
+    {
+        return this.isCompletedSuccessfully;
+    }
 }
