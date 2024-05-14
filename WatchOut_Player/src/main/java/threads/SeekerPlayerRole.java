@@ -38,13 +38,19 @@ public class SeekerPlayerRole extends PlayerRoleThread
                 //wait the time required to reach the target
                 wait((long) Math.ceil(playerDistanceToSeek.getValue() / this.playerSpeed));
                 
-                //check if the hider is Active
                 Player currentPlayer = this.smartWatch.getPlayer();
                 
+                //check if the hider is Active to change it to tagged
                 currentPlayer.AcquireOtherPlayerLock(playerDistanceToSeek.getKey());
                 if(currentPlayer.getOtherPlayer(playerDistanceToSeek.getKey()).getStatus().equals(PlayerStatus.Active))
                 {
-                    this.smartWatch.informPlayerChangedPositionOrStatus(playerDistanceToSeek.getKey(), true);
+                    Player otherPlayer = currentPlayer.getOtherPlayer(playerDistanceToSeek.getKey());
+                    
+                    otherPlayer.setStatus(PlayerStatus.Tagged);
+                    
+                    this.smartWatch.informPlayerChangedPositionOrStatus(playerDistanceToSeek.getKey(), otherPlayer, true);
+                    
+                    currentPlayer.upsertOtherPlayer(playerDistanceToSeek.getKey(), otherPlayer);
                 }
                 
                 currentPlayer.ReleaseOtherPlayerLock(playerDistanceToSeek.getKey());

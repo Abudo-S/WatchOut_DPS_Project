@@ -148,9 +148,10 @@ public class SmartWatch
     /**
      * invoked by HiderPlayerThread or SeekerPlayerThread
      * @param changedPlayerEndPoint
-     * @param isSeeker 
+     * @param changedPlayer
+     * @param isSentBySeeker 
      */
-    public void informPlayerChangedPositionOrStatus(String changedPlayerEndPoint, boolean isSeeker)
+    public void informPlayerChangedPositionOrStatus(String changedPlayerEndPoint, Player changedPlayer , boolean isSentBySeeker)
     {
         try 
         {
@@ -162,7 +163,7 @@ public class SmartWatch
 
             for(String endpoint : otherPlayersEndsPoints)
             {
-                InformPlayerChangedThread informPlayerChanged_thread = new InformPlayerChangedThread(endpoint, this, changedPlayerEndPoint, isSeeker);
+                InformPlayerChangedThread informPlayerChanged_thread = new InformPlayerChangedThread(endpoint, this, changedPlayerEndPoint, changedPlayer, isSentBySeeker);
                 informPlayerChanged_thread.start();
             }
         }

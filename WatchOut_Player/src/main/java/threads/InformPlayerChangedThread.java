@@ -17,23 +17,23 @@ public class InformPlayerChangedThread extends Thread
     private String remotePlayerEndpoint;
     private String changedPlayerEndPoint;
     private SmartWatch smartWatch;
-    private boolean isSeeker;
+    private Player changedPlayer;
+    private boolean isSentBySeeker;
     
-    public InformPlayerChangedThread(String remotePlayerEndpoint, SmartWatch smartWatch, String changedPlayerEndPoint, boolean isSeeker)
+    public InformPlayerChangedThread(String remotePlayerEndpoint, SmartWatch smartWatch, String changedPlayerEndPoint, Player changedPlayer, boolean isSentBySeeker)
     {
         this.remotePlayerEndpoint = remotePlayerEndpoint;
         this.smartWatch = smartWatch;
         this.changedPlayerEndPoint = changedPlayerEndPoint;
-        this.isSeeker = isSeeker;
+        this.changedPlayer = changedPlayer;
+        this.isSentBySeeker = isSentBySeeker;
     }
     
     @Override
     public void run()
     {
         try
-        {
-            Player player = this.smartWatch.getPlayer();
-            
+        {   
             //init grpc service client
             final ManagedChannel channel = ManagedChannelBuilder.forTarget(remotePlayerEndpoint).usePlaintext().build();
 
@@ -41,10 +41,10 @@ public class InformPlayerChangedThread extends Thread
 
             PlayerServiceOuterClass.ChangePositionOrStatusRequest msg = PlayerServiceOuterClass.ChangePositionOrStatusRequest.newBuilder()
                                                                                                 .setTargetEndpoint(this.changedPlayerEndPoint)
-                                                                                                .setStatus(player.getStatus().name())
-                                                                                                .setPositionX(player.getPosition()[0])
-                                                                                                .setPositionY(player.getPosition()[1])
-                                                                                                .setIsSentBySeeker(isSeeker)
+                                                                                                .setStatus(changedPlayer.getStatus().name())
+                                                                                                .setPositionX(changedPlayer.getPosition()[0])
+                                                                                                .setPositionY(changedPlayer.getPosition()[1])
+                                                                                                .setIsSentBySeeker(isSentBySeeker)
                                                                                                 .build();
 
             StreamObserver streamObserver = stub.changePositionOrStatusStream(getServerResponseObserver());
