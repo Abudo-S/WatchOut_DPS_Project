@@ -18,6 +18,8 @@ import simulators.HRSimulator;
  */
 public class SmartWatch
 {
+    private static final double PLAYER_SPEED_UNITS = 2.0;
+            
     private String grpcServiceEndpoint; 
     private volatile Player player;
     private MonitorHrValuesThread monitorHrValues_thread;
@@ -53,7 +55,7 @@ public class SmartWatch
             
             for(String endpoint : otherPlayersEndsPoints)
             {
-                InformForNewEntryThread InformForNewEntry_thread = new InformForNewEntryThread(endpoint, this, grpcServiceEndpoint);
+                InformForNewEntryThread InformForNewEntry_thread = new InformForNewEntryThread(endpoint, this, this.grpcServiceEndpoint);
                 InformForNewEntry_thread.start();
             }
         }
@@ -102,7 +104,7 @@ public class SmartWatch
             
             if(finalAgreedSeeker)
             {
-                SeekerPlayerRole seekerRole_thread = new SeekerPlayerRole(this, grpcServiceEndpoint);
+                SeekerPlayerRole seekerRole_thread = new SeekerPlayerRole(this, this.grpcServiceEndpoint, PLAYER_SPEED_UNITS);
                 seekerRole_thread.start();
             }
             else
@@ -117,10 +119,58 @@ public class SmartWatch
         }
     }
     
+    /**
+     * inform all players [considered safe] that the game is terminated
+     */
     public void informGameTermination()
     {
-        //to be implemented
-        //inform all players [considered safe] that the game is terminated
+        try 
+        {
+            Set<String> otherPlayersEndsPoints;
+
+            this.playerLock.Acquire();
+            otherPlayersEndsPoints = this.player.getOtherPlayers().keySet();
+            this.playerLock.Release();
+
+            for(String endpoint : otherPlayersEndsPoints)
+            {
+                InformForNewEntryThread informGameTerm_thread = new InformForNewEntryThread(endpoint, this, this.grpcServiceEndpoint);
+                informGameTerm_thread.start();
+            }
+        }
+        catch(Exception e)
+        {
+            System.err.println("In informGameTermination: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * invoked by HiderPlayerThread or SeekerPlayerThread
+     * @param changedPlayerEndPoint
+     * @param isSeeker 
+     */
+    public void informPlayerChangedPositionOrStatus(String changedPlayerEndPoint, boolean isSeeker)
+    {
+        try 
+        {
+            Set<String> otherPlayersEndsPoints;
+
+            this.playerLock.Acquire();
+            otherPlayersEndsPoints = this.player.getOtherPlayers().keySet();
+            this.playerLock.Release();
+
+            for(String endpoint : otherPlayersEndsPoints)
+            {
+                InformPlayerChangedThread informPlayerChanged_thread = new InformPlayerChangedThread(endpoint, this, changedPlayerEndPoint, isSeeker);
+                informPlayerChanged_thread.start();
+            }
+        }
+        catch(Exception e)
+        {
+            System.err.println("In informPlayerChangedPositionOrStatus: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
     public void stopSmartWatch()
