@@ -36,7 +36,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
                                                                         .setStatus(player.getStatus().name())
                                                                         .build();
 
-            //send messages
+            //send response
             responseObserver.onNext(response);
         }
         catch (Exception e)
@@ -84,12 +84,12 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
                                                                         .setResult(isAgreed)
                                                                         .build();
 
-            //send messages
+            //send response
             responseObserver.onNext(response);
         }
         catch (Exception e)
         {
-            System.err.println("In InformNewPlayer: " + e.getMessage());
+            System.err.println("In CanIbeSeekerRequest: " + e.getMessage());
             e.printStackTrace();
         }
         finally
@@ -99,12 +99,48 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
         }
     }
 
+    /**
+     * The current player compare its position with the remote player's position, if current-player position is closer to the H.B. then return false;
+     * if current-player position is equal and its id is higher then return false;
+     * otherwise return true.
+     * If this node is a seeker or its associated otherPlayers contains a seeker then return false anyway. (means that phase 0 is terminated)
+     * @param request
+     * @param responseObserver 
+     */
+    public void InformGameTermination(PlayerServiceOuterClass.InformGameTerminationRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
+        try
+        {
+            System.out.println("Invoked InformGameTermination with request: " + request);
+        
+            System.out.println("Game terminated by player's endpoint: " + request.getSenderEndpoint());
+            
+            //prepare response
+            PlayerServiceOuterClass.GenericResultResponse response = PlayerServiceOuterClass.GenericResultResponse.newBuilder()
+                                                                        .setResult(true)
+                                                                        .build();
+
+            //send response
+            responseObserver.onNext(response);
+        }
+        catch (Exception e)
+        {
+            System.err.println("In InformGameTermination: " + e.getMessage());
+            e.printStackTrace();
+        }
+        finally
+        {
+            //indicate termination
+            responseObserver.onCompleted();
+        }
+    }
+    
     public StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest> ChangePositionOrStatusStream(StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
 
         //the client will write on this stream
         return new StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest>() 
         {
             //receiving a message from the client
+            @Override
             public void onNext(PlayerServiceOuterClass.ChangePositionOrStatusRequest clientMessage)
             {
                 boolean result = false;
@@ -115,15 +151,15 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
                     
                     Player player = SmartWatch.getSubsequentInstance().getPlayer();
                     
-                    player.AcquireOtherPlayerLock(clientMessage.getSenderEndpoint());
-                    Player otherPlayer = player.getOtherPlayer(clientMessage.getSenderEndpoint());
+                    player.AcquireOtherPlayerLock(clientMessage.getTargetEndpoint());
+                    Player otherPlayer = player.getOtherPlayer(clientMessage.getTargetEndpoint());
                     
                     //update otherPlayer data.
                     otherPlayer.setStatus(PlayerStatus.valueOf(clientMessage.getStatus()));
                     otherPlayer.setPosition(new int[] {clientMessage.getPositionX(), clientMessage.getPositionY()});
                     
-                    player.upsertOtherPlayer(clientMessage.getSenderEndpoint(), otherPlayer);
-                    player.ReleaseOtherPlayerLock(clientMessage.getSenderEndpoint());
+                    player.upsertOtherPlayer(clientMessage.getTargetEndpoint(), otherPlayer);
+                    player.ReleaseOtherPlayerLock(clientMessage.getTargetEndpoint());
                     
                     result = true;
                 }
@@ -140,11 +176,13 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
                 }
             }
 
+            @Override
             public void onError(Throwable throwable) 
             {
 
             }
 
+            @Override
             public void onCompleted() 
             {
 
