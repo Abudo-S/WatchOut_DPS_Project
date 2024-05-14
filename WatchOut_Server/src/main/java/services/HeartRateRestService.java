@@ -14,7 +14,7 @@ public class HeartRateRestService
     @Path("get_player_avg_n_hrs/{playerId}/{n}")
     @GET
     @Produces({"application/json"})
-    public Response getPlayerAvgNHrs(int playerId, int n)
+    public Response getPlayerAvgNHrs(@PathParam("playerId") int playerId, @PathParam("n") int n)
     {
         try
         {
@@ -22,11 +22,12 @@ public class HeartRateRestService
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
 
-            return Response.ok(registry.getPlayerAvgNHrs(playerId, n)).build();
+            return Response.ok(new Gson().toJson(registry.getPlayerAvgNHrs(playerId, n))).build();
         }
         catch(Exception e)
         {
-            System.out.println("In getPlayerAvgNHrs: " + e.getMessage());
+            System.err.println("In getPlayerAvgNHrs: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
@@ -36,7 +37,7 @@ public class HeartRateRestService
     @Path("get_player_avg_hrs/{ts1}/{ts2}")
     @GET
     @Produces({"application/json"})
-    public Response getPlayerAvgTimestampedHrs(long ts1, long ts2)
+    public Response getPlayerAvgTimestampedHrs(@PathParam("ts1") long ts1,@PathParam("ts2") long ts2)
     {
         try
         {
@@ -44,11 +45,12 @@ public class HeartRateRestService
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
 
-            return Response.ok(registry.getTotalAvgTimestampedHrs(ts1, ts2)).build();
+            return Response.ok(new Gson().toJson(registry.getTotalAvgTimestampedHrs(ts1, ts2))).build();
         }
         catch(Exception e)
         {
-            System.out.println("In getPlayerAvgTimestampedHrs: " + e.getMessage());
+            System.err.println("In getPlayerAvgTimestampedHrs: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
@@ -69,7 +71,8 @@ public class HeartRateRestService
         }
         catch(Exception e)
         {
-            System.out.println("In getPlayersHRs: " + e.getMessage());
+            System.err.println("In getPlayersHRs: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
@@ -97,7 +100,8 @@ public class HeartRateRestService
         }
         catch(Exception e)
         {
-            System.out.println("In addPlayerHrs: " + e.getMessage());
+            System.err.println("In addPlayerHrs: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();

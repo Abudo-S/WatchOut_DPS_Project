@@ -163,7 +163,8 @@ public class PlayersRegistryManager
         }
         catch (Exception e) 
         {
-            System.out.println("In getPlayerAvgNHrs: " + e.getMessage());
+            System.err.println("In getPlayerAvgNHrs: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return avg;
@@ -204,7 +205,8 @@ public class PlayersRegistryManager
         }
         catch (Exception e) 
         {
-            System.out.println("In getPlayerAvgNHrs: " + e.getMessage());
+            System.err.println("In getPlayerAvgNHrs: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return avg;

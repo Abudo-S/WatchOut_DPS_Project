@@ -44,7 +44,8 @@ public class RegistrationRestService
         }
         catch(Exception e)
         {
-            System.out.println("In addPlayer: " + e.getMessage());
+            System.err.println("In addPlayer: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
@@ -61,11 +62,12 @@ public class RegistrationRestService
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
             
-            return Response.ok(new Gson().toJson(new TotalPlayersNumberResponse(registry.getTotalPlayersNumber()))).build();
+            return Response.ok(new Gson().toJson(new GenericRestResponse(String.valueOf(registry.getTotalPlayersNumber())))).build();
         }
         catch(Exception e)
         {
-            System.out.println("In getTotalPlayersNumber: " + e.getMessage());
+            System.err.println("In getTotalPlayersNumber: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
@@ -95,7 +97,8 @@ public class RegistrationRestService
         }
         catch(Exception e)
         {
-            System.out.println("In getAllPlayers: " + e.getMessage());
+            System.err.println("In getAllPlayers: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
