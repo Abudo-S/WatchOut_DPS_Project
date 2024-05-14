@@ -3,6 +3,7 @@ package client;
 import threads.*;
 import com.google.gson.Gson;
 import com.sun.jersey.api.client.Client;
+import java.io.IOException;
 import java.util.Scanner;
 
 public class AdminClient 
@@ -64,7 +65,7 @@ public class AdminClient
                             Thread.sleep(500);
                         }
 
-                        System.out.println(getAllPlayers.getResponse().toString());
+                        System.out.println("Players: " + getAllPlayers.getResponse().toString());
                         
                         break;
 
@@ -82,7 +83,7 @@ public class AdminClient
                             Thread.sleep(500);
                         }
 
-                        System.out.println("Avg:" + getAvgNHrsPlayers.getResponse());
+                        System.out.println("Avg:" + getAvgNHrsPlayers.getResult());
                         break;
 
                     case (3):
@@ -99,7 +100,7 @@ public class AdminClient
                             Thread.sleep(500);
                         }
 
-                        System.out.println("Avg:" + getPlayerAvgTsHrs.getResponse());
+                        System.out.println("Avg:" + getPlayerAvgTsHrs.getResult());
                         break;
 
                     case (4):
@@ -125,7 +126,17 @@ public class AdminClient
             catch(Exception e)
             {
                 System.err.println("In startCLI_menu: " + e.getMessage());
+                e.printStackTrace();
+                
                 System.err.println("Retry option!");
+                try 
+                {
+                    System.in.read();
+                }               
+                catch(IOException ex)
+                {
+                    System.err.println("In startCLI_menu: " + ex.getMessage());
+                }
             }
         }
     }

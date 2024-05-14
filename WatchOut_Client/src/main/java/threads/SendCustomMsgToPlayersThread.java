@@ -43,6 +43,7 @@ public class SendCustomMsgToPlayersThread extends Thread
         catch (Exception e)
         {
             System.err.println("In run: " + e.getMessage());
+            e.printStackTrace();
         }
         
         this.isCompletedSuccessfully = true;

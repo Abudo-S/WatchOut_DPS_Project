@@ -6,7 +6,7 @@
 package threads;
 
 import beans.RestServerSuffixes;
-import beans.TotalPlayersNumberResponse;
+import beans.GenericRestResponse;
 import com.google.gson.Gson;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -42,7 +42,7 @@ public class CheckToStartGameThread extends RestPeriodicThread
                 System.out.println("CheckToStartGameThread: " + clientResponse.toString());
 
                 String response = clientResponse.getEntity(String.class);
-                int playersNum = jsonSerializer.fromJson(response, TotalPlayersNumberResponse.class).getPlayersNum();
+                int playersNum = Integer.parseInt(jsonSerializer.fromJson(response, GenericRestResponse.class).getResult());
 
                 boolean result = GameManager.getInstance().checkToStart(playersNum);
 
@@ -57,6 +57,7 @@ public class CheckToStartGameThread extends RestPeriodicThread
         catch (Exception e)
         {
             System.err.println("In run: " + e.getMessage());
+            e.printStackTrace();
         }
         
         this.isCompletedSuccessfully = true;

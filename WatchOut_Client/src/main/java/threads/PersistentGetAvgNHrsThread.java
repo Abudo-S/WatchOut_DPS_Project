@@ -16,7 +16,7 @@ public class PersistentGetAvgNHrsThread extends RestPeriodicThread
 {
     private int playerId;
     private int n;
-    private volatile double response;
+    private volatile double result;
 
     public PersistentGetAvgNHrsThread (Client client, String serverAddress, Gson jsonSerializer, int waitMilliseconds, int playerId, int n)
     {
@@ -35,7 +35,7 @@ public class PersistentGetAvgNHrsThread extends RestPeriodicThread
                 String url = serverAddress + RestServerSuffixes.GET_PLAYER_AVG_N_HRS;
                 
                 //set url parameters
-                url = url.replaceAll("{playerId}", String.valueOf(this.playerId)).replaceAll("{n}", String.valueOf(this.n));
+                url = url.replaceAll("\\{playerId\\}", String.valueOf(this.playerId)).replaceAll("\\{n\\}", String.valueOf(this.n));
                 
                 //transmit player's endpoint
                 ClientResponse clientResponse = this.performGetRequest(this.client, url);
@@ -53,8 +53,10 @@ public class PersistentGetAvgNHrsThread extends RestPeriodicThread
                 //check if sent successfully 
                 if(responseStatus.getStatusCode() == Response.Status.OK.getStatusCode())
                 {
-                    this.response = clientResponse.getEntity(Double.class);
-                
+                    String response = clientResponse.getEntity(String.class);
+                    GenericRestResponse genericRestResponse = jsonSerializer.fromJson(response, GenericRestResponse.class);
+                    this.result = Double.parseDouble(genericRestResponse.getResult());
+                    
                     break;
                 }
                 else
@@ -67,13 +69,14 @@ public class PersistentGetAvgNHrsThread extends RestPeriodicThread
         catch (Exception e)
         {
             System.err.println("In run: " + e.getMessage());
+            e.printStackTrace();
         }
         
         this.isCompletedSuccessfully = true;
     }
     
-    public double getResponse()
+    public double getResult()
     {
-        return this.response;
+        return this.result;
     }
 }

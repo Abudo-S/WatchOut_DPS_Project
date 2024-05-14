@@ -16,7 +16,7 @@ public class PersistentGetTotalAvgTsHrsThread extends RestPeriodicThread
 {
     private long ts1;
     private long ts2;
-    private volatile double response;
+    private volatile double result;
 
     public PersistentGetTotalAvgTsHrsThread (Client client, String serverAddress, Gson jsonSerializer, int waitMilliseconds, long ts1, long ts2)
     {
@@ -35,7 +35,7 @@ public class PersistentGetTotalAvgTsHrsThread extends RestPeriodicThread
                 String url = serverAddress + RestServerSuffixes.GET_PLAYER_AVG_TIMESTAMPED_HRS;
                 
                 //set url parameters
-                url = url.replaceAll("{ts1}", String.valueOf(this.ts1)).replaceAll("{ts2}", String.valueOf(this.ts2));
+                url = url.replaceAll("\\{ts1\\}", String.valueOf(this.ts1)).replaceAll("\\{ts2\\}", String.valueOf(this.ts2));
                 
                 //transmit player's endpoint
                 ClientResponse clientResponse = this.performGetRequest(this.client, url);
@@ -53,7 +53,9 @@ public class PersistentGetTotalAvgTsHrsThread extends RestPeriodicThread
                 //check if sent successfully 
                 if(responseStatus.getStatusCode() == Response.Status.OK.getStatusCode())
                 {
-                    this.response = clientResponse.getEntity(Double.class);
+                    String response = clientResponse.getEntity(String.class);
+                    GenericRestResponse genericRestResponse = jsonSerializer.fromJson(response, GenericRestResponse.class);
+                    this.result = Double.parseDouble(genericRestResponse.getResult());
                 
                     break;
                 }
@@ -67,13 +69,14 @@ public class PersistentGetTotalAvgTsHrsThread extends RestPeriodicThread
         catch (Exception e)
         {
             System.err.println("In run: " + e.getMessage());
+            e.printStackTrace();
         }
         
         this.isCompletedSuccessfully = true;
     }
     
-    public double getResponse()
+    public double getResult()
     {
-        return this.response;
+        return this.result;
     }
 }

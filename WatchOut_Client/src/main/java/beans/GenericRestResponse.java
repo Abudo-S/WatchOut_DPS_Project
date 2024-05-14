@@ -7,17 +7,17 @@ package beans;
  * and open the template in the editor.
  */
 
-public class TotalPlayersNumberResponse
+public class GenericRestResponse
 {
-    private int playersNum;
+    private String result;
 
-    public TotalPlayersNumberResponse(int playersNum)
+    public GenericRestResponse(String result)
     {
-        this.playersNum = playersNum;
+        this.result = result;
     }
 
-    public int getPlayersNum()
+    public String getResult()
     {
-        return this.playersNum;
+        return this.result;
     }
 }

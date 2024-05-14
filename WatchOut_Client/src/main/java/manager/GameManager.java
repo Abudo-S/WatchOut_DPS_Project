@@ -56,11 +56,13 @@ public class GameManager
         }
         catch (MqttException mqttE) 
         {
-            System.out.println("In connectMqttBroker: reason " + mqttE.getReasonCode() + ", cause: " + mqttE.getCause() + ", msg: " + mqttE.getMessage());
+            System.err.println("In connectMqttBroker: reason " + mqttE.getReasonCode() + ", cause: " + mqttE.getCause() + ", msg: " + mqttE.getMessage());
+            mqttE.printStackTrace();
         } 
         catch (Exception e) 
         {
-            System.out.println("In connectMqttBroker: " + e.getMessage());
+            System.err.println("In connectMqttBroker: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -84,7 +86,8 @@ public class GameManager
         }
         catch (Exception e) 
         {
-            System.out.println("In checkToStart: " + e.getMessage());
+            System.err.println("In checkToStart: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return false;
@@ -138,7 +141,8 @@ public class GameManager
         }
         catch (Exception e) 
         {
-            System.out.println("In checkToStop: " + e.getMessage());
+            System.err.println("In checkToStop: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return false;
@@ -160,7 +164,8 @@ public class GameManager
         }
         catch (Exception e) 
         {
-            System.out.println("In sendCustomMsg: " + e.getMessage());
+            System.err.println("In sendCustomMsg: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return false;
