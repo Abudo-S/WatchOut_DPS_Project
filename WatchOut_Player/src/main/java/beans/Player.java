@@ -164,6 +164,7 @@ public class Player
         catch(Exception e)
         {
             System.err.println("In CompareCloserDistanceToHB: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return false;

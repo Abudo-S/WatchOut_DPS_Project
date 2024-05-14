@@ -90,6 +90,7 @@ public class PlayerManager
         catch (Exception e)
         {
             System.err.println("In checkAndStartSmartWatch: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -164,7 +165,8 @@ public class PlayerManager
         } 
         catch (Exception e) 
         {
-            System.out.println("In connectMqttBroker: " + e.getMessage());
+            System.err.println("In connectMqttBroker: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     

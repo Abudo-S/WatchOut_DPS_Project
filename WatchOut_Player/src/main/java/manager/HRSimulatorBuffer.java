@@ -44,6 +44,7 @@ public class HRSimulatorBuffer implements Buffer
         catch(Exception e)
         {
             System.err.println("In addMeasurement: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -73,6 +74,7 @@ public class HRSimulatorBuffer implements Buffer
         catch(Exception e)
         {
             System.err.println("In readAllAndClean: " + e.getMessage());
+            e.printStackTrace();
         }
         
         return bufferedMeasurements;

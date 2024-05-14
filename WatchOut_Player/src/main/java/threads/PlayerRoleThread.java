@@ -15,13 +15,11 @@ import services.PlayerServiceOuterClass;
 
 public abstract class PlayerRoleThread extends Thread
 {
-    private String remotePlayerEndpoint;
-    private SmartWatch smartWatch;
-    private String playerEndPoint;
+    protected SmartWatch smartWatch;
+    protected String playerEndPoint;
     
-    public PlayerRoleThread(String remotePlayerEndpoint, SmartWatch smartWatch, String playerEndPoint)
+    public PlayerRoleThread(SmartWatch smartWatch, String playerEndPoint)
     {
-        this.remotePlayerEndpoint = remotePlayerEndpoint;
         this.smartWatch = smartWatch;
         this.playerEndPoint = playerEndPoint;
     }
@@ -29,7 +27,7 @@ public abstract class PlayerRoleThread extends Thread
     @Override
     public abstract void run();
     
-    public void informPositionAndStatus()
+    public void informPositionAndStatus(String remotePlayerEndpoint)
     {
         try
         {
@@ -38,7 +36,7 @@ public abstract class PlayerRoleThread extends Thread
             Player player = this.smartWatch.getPlayer();
             
             //init grpc service client
-            final ManagedChannel channel = ManagedChannelBuilder.forTarget(this.remotePlayerEndpoint).usePlaintext().build();
+            final ManagedChannel channel = ManagedChannelBuilder.forTarget(remotePlayerEndpoint).usePlaintext().build();
 
             PlayerServiceGrpc.PlayerServiceStub stub = PlayerServiceGrpc.newStub(channel);
 
@@ -57,6 +55,7 @@ public abstract class PlayerRoleThread extends Thread
         catch(Exception e)
         {
             System.err.println("In informPositionAndStatus: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     

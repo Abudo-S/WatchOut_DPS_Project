@@ -88,7 +88,7 @@ public class CheckToSendHrAvgsThread extends RestPeriodicThread
         catch (Exception e)
         {
             System.err.println("In run: " + e.getMessage());
-            this.reservedHrAvgs_Lock.Release(); //release the lock if it was acquired
+            e.printStackTrace();
         }
     }
     

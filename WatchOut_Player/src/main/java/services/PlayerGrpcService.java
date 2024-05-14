@@ -42,6 +42,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
         catch (Exception e)
         {
             System.err.println("In InformNewPlayer: " + e.getMessage());
+            e.printStackTrace();
         }
         finally
         {
@@ -89,6 +90,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
         catch (Exception e)
         {
             System.err.println("In InformNewPlayer: " + e.getMessage());
+            e.printStackTrace();
         }
         finally
         {
@@ -128,6 +130,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
                 catch (Exception e) 
                 {
                      System.err.println("In ChangePositionOrStatusStream: " + e.getMessage());
+                     e.printStackTrace();
                 }
                 finally
                 {

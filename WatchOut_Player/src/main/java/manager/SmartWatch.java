@@ -59,7 +59,8 @@ public class SmartWatch
         }
         catch(Exception e)
         {
-            System.out.println("informNewEntry: " + e.getMessage());
+            System.err.println("In informNewEntry: " + e.getMessage());
+            e.printStackTrace();
         }
     }
     
@@ -101,7 +102,8 @@ public class SmartWatch
             
             if(finalAgreedSeeker)
             {
-                //start seeker thread
+                SeekerPlayerRole seekerRole_thread = new SeekerPlayerRole(this, grpcServiceEndpoint);
+                seekerRole_thread.start();
             }
             else
             {
@@ -110,13 +112,30 @@ public class SmartWatch
         }
         catch(Exception e)
         {
-            System.out.println("informNewEntry: " + e.getMessage());
+            System.err.println("In informNewEntry: " + e.getMessage());
+            e.printStackTrace();
         }
+    }
+    
+    public void informGameTermination()
+    {
+        //to be implemented
+        //inform all players [considered safe] that the game is terminated
     }
     
     public void stopSmartWatch()
     {
         monitorHrValues_thread.stopMeGently();
+    }
+    
+    public void AcquirePlayerLock()
+    {
+       this.playerLock.Acquire();
+    }
+    
+    public void ReleasePlayerLock()
+    {
+        this.playerLock.Release();
     }
     
     /**
