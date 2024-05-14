@@ -10,9 +10,9 @@ import manager.SmartWatch;
 
 public class HiderPlayerRole extends PlayerRoleThread
 {
-    public HiderPlayerRole(SmartWatch smartWatch, String playerEndPoint)
+    public HiderPlayerRole(SmartWatch smartWatch, String playerEndPoint, double playerSpeed)
     {
-        super(smartWatch, playerEndPoint);
+        super(smartWatch, playerEndPoint, playerSpeed);
     }
 
     @Override

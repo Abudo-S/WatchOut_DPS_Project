@@ -12,21 +12,44 @@ import java.util.*;
 import java.util.Map.Entry;
 import manager.SmartWatch;
 
-
 public class SeekerPlayerRole extends PlayerRoleThread
-{
-    public SeekerPlayerRole(SmartWatch smartWatch, String playerEndPoint)
+{   
+    public SeekerPlayerRole(SmartWatch smartWatch, String playerEndPoint, double playerSpeed)
     {
-        super(smartWatch, playerEndPoint);
+        super(smartWatch, playerEndPoint, playerSpeed);
     }
 
+    /**
+     * A seeker tries to reach the closest hider (shortest distance) to its position.
+     * Once the hider to seek is defined, this seeker waits the time to reach it (simulated reaching), 
+     * then it checks if hider's status is Active to tag it and inform all players of the tagged hider (including the hider).
+     * time = distance / speed
+     */
     @Override
-    public void run() 
+    public synchronized void run() 
     {
         try 
         {
-            //to be implemented
-        } 
+            while(true)
+            {
+                //choose player to seek
+                SimpleEntry<String, Double> playerDistanceToSeek = detectShortestOtherPlayerDistance();
+            
+                //wait the time required to reach the target
+                wait((long) Math.ceil(playerDistanceToSeek.getValue() / this.playerSpeed));
+                
+                //check if the hider is Active
+                Player currentPlayer = this.smartWatch.getPlayer();
+                
+                currentPlayer.AcquireOtherPlayerLock(playerDistanceToSeek.getKey());
+                if(currentPlayer.getOtherPlayer(playerDistanceToSeek.getKey()).getStatus().equals(PlayerStatus.Active))
+                {
+                    this.smartWatch.informPlayerChangedPositionOrStatus(playerDistanceToSeek.getKey(), true);
+                }
+                
+                currentPlayer.ReleaseOtherPlayerLock(playerDistanceToSeek.getKey());
+            } 
+        }
         catch(Exception e)
         {
             System.err.println("In run: " + e.getMessage());

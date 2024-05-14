@@ -5,81 +5,27 @@
  */
 package threads;
 
-import beans.Player;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.stub.StreamObserver;
 import manager.SmartWatch;
-import services.PlayerServiceGrpc;
-import services.PlayerServiceOuterClass;
 
 public abstract class PlayerRoleThread extends Thread
 {
     protected SmartWatch smartWatch;
     protected String playerEndPoint;
+    protected double playerSpeed;
     
-    public PlayerRoleThread(SmartWatch smartWatch, String playerEndPoint)
+    public PlayerRoleThread(SmartWatch smartWatch, String playerEndPoint, double playerSpeed)
     {
         this.smartWatch = smartWatch;
         this.playerEndPoint = playerEndPoint;
+        this.playerSpeed = playerSpeed;
+    }
+    
+    public double getSpeed()
+    {
+        return this.playerSpeed;
     }
     
     @Override
     public abstract void run();
     
-    public void informPositionAndStatus(String remotePlayerEndpoint)
-    {
-        try
-        {
-            System.out.println("Invoked informPositionAndStatus with remotePlayerEndpoint: " + remotePlayerEndpoint);
-            
-            Player player = this.smartWatch.getPlayer();
-            
-            //init grpc service client
-            final ManagedChannel channel = ManagedChannelBuilder.forTarget(remotePlayerEndpoint).usePlaintext().build();
-
-            PlayerServiceGrpc.PlayerServiceStub stub = PlayerServiceGrpc.newStub(channel);
-
-            PlayerServiceOuterClass.ChangePositionOrStatusRequest msg = PlayerServiceOuterClass.ChangePositionOrStatusRequest.newBuilder()
-                                                                                                .setSenderEndpoint(this.playerEndPoint)
-                                                                                                .setStatus(player.getStatus().name())
-                                                                                                .setPositionX(player.getPosition()[0])
-                                                                                                .setPositionY(player.getPosition()[1])
-                                                                                                .build();
-
-            StreamObserver streamObserver = stub.changePositionOrStatusStream(getServerResponseObserver());
-
-            //insert player's msg in the stream
-            streamObserver.onNext(msg);
-        }
-        catch(Exception e)
-        {
-            System.err.println("In informPositionAndStatus: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-    
-    public StreamObserver<PlayerServiceOuterClass.GenericResultResponse> getServerResponseObserver(){
-      StreamObserver<PlayerServiceOuterClass.GenericResultResponse> observer = new StreamObserver<PlayerServiceOuterClass.GenericResultResponse>()
-      {
-          @Override
-          public void onNext(PlayerServiceOuterClass.GenericResultResponse v) 
-          {
-              System.out.println("Invoked getServerResponseObserver.onNext with result: " + v.getResult());
-          }
-
-          @Override
-          public void onError(Throwable thrwbl) 
-          {
-              System.out.println("Invoked getServerResponseObserver.onError with: " + thrwbl.getMessage());
-          }
-
-          @Override
-          public void onCompleted() 
-          {
-              System.out.println("Invoked getServerResponseObserver.onCompleted!");
-          }
-      };
-      return observer;
-   }
 }
