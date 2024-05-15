@@ -14,9 +14,13 @@ import manager.SmartWatch;
 
 public class SeekerPlayerRole extends PlayerRoleThread
 {   
-    public SeekerPlayerRole(SmartWatch smartWatch, String playerEndPoint, double playerSpeed)
+    private static final long TIMEOUT_TO_TERMINATE = 30000; //30s
+    
+    public SeekerPlayerRole(String playerEndPoint, double playerSpeed)
     {
-        super(smartWatch, playerEndPoint, playerSpeed);
+        super(playerEndPoint, playerSpeed);
+        
+        System.err.println("Started seeker role.");
     }
 
     /**
@@ -35,22 +39,38 @@ public class SeekerPlayerRole extends PlayerRoleThread
                 //choose player to seek
                 SimpleEntry<String, Double> playerDistanceToSeek = detectShortestOtherPlayerDistance();
             
-                //wait the time required to reach the target
-                wait((long) Math.ceil(playerDistanceToSeek.getValue() / this.playerSpeed));
+                if(playerDistanceToSeek == null)
+                {
+                    System.err.println("No player to seeker is found! Asking smartWatch to terminate the game...");
+                    
+                    //inform game termination
+                    SmartWatch.getSubsequentInstance().informGameTermination();
+                    break;
+                }
                 
-                Player currentPlayer = this.smartWatch.getPlayer();
+                long timeToReachTarget = (long) Math.ceil(playerDistanceToSeek.getValue() / this.playerSpeed);
+                        
+                System.out.println("Seeking player with endpoint: " + playerDistanceToSeek.getKey() + ", time to reach him: " + timeToReachTarget);
+                    
+                //wait the time required to reach the target
+                wait(timeToReachTarget);
+                
+                Player currentPlayer = SmartWatch.getSubsequentInstance().getPlayer();
                 
                 //check if the hider is Active to change it to tagged
                 currentPlayer.AcquireOtherPlayerLock(playerDistanceToSeek.getKey());
                 if(currentPlayer.getOtherPlayer(playerDistanceToSeek.getKey()).getStatus().equals(PlayerStatus.Active))
                 {
+                    //read other player
                     Player otherPlayer = currentPlayer.getOtherPlayer(playerDistanceToSeek.getKey());
                     
                     otherPlayer.setStatus(PlayerStatus.Tagged);
                     
-                    this.smartWatch.informPlayerChangedPositionOrStatus(playerDistanceToSeek.getKey(), otherPlayer, true);
+                    SmartWatch.getSubsequentInstance().informPlayerChangedPositionOrStatus(playerDistanceToSeek.getKey(), otherPlayer, true);
                     
                     currentPlayer.upsertOtherPlayer(playerDistanceToSeek.getKey(), otherPlayer);
+                    
+                    System.out.println("Tagged player with endpoint: " + playerDistanceToSeek.getKey());
                 }
                 
                 currentPlayer.ReleaseOtherPlayerLock(playerDistanceToSeek.getKey());
@@ -69,35 +89,41 @@ public class SeekerPlayerRole extends PlayerRoleThread
      * if the seeker doesn't find any player to seek then it informs smartWatch that the game is terminated.
      * @return <otherPlayerEndpoint, distanceToRun>
      */
-    private SimpleEntry<String, Double> detectShortestOtherPlayerDistance()
+    private synchronized SimpleEntry<String, Double> detectShortestOtherPlayerDistance() throws InterruptedException
     {
+        long timeoutCounter = 0;
         SimpleEntry<String, Double> shortestOtherPlayerDistance = null;
         HashMap<String, Double> endpointsDistances = new HashMap();
-                
-        Player currentPlayer = this.smartWatch.getPlayer();
         
-        this.smartWatch.AcquirePlayerLock(); //to mantain otherPlayers data coherency on the same object 
-        currentPlayer.getOtherPlayers()
-                     .entrySet()
-                     .stream()
-                     .filter(f -> f.getValue().getStatus().equals(PlayerStatus.Active))
-                     .forEach(m -> endpointsDistances.put(m.getKey(), currentPlayer.getDistanceToPosition(m.getValue().getPosition())));
-                
-        Optional<Entry<String, Double>> shortestEndpointD = endpointsDistances.entrySet()
-                                                                              .stream()
-                                                                              .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
-                                                                              .findFirst();
+        while(timeoutCounter < TIMEOUT_TO_TERMINATE)
+        {
+            Player currentPlayer = SmartWatch.getSubsequentInstance().getPlayer();
 
-        this.smartWatch.ReleasePlayerLock();
-        
-        if(shortestEndpointD.isPresent())
-        {
-            shortestOtherPlayerDistance = new SimpleEntry(shortestEndpointD.get().getKey(), shortestEndpointD.get().getValue());
-        }
-        else //inform game termination
-        {
-            this.smartWatch.informGameTermination();
-        }
+            SmartWatch.getSubsequentInstance().AcquirePlayerLock(); //to mantain otherPlayers data coherency on the same object 
+            currentPlayer.getOtherPlayers()
+                         .entrySet()
+                         .stream()
+                         .filter(f -> f.getValue().getStatus().equals(PlayerStatus.Active))
+                         .forEach(m -> endpointsDistances.put(m.getKey(), currentPlayer.getDistanceToPosition(m.getValue().getPosition())));
+
+            Optional<Entry<String, Double>> shortestEndpointD = endpointsDistances.entrySet()
+                                                                                  .stream()
+                                                                                  .sorted(Map.Entry.<String, Double>comparingByValue().reversed())
+                                                                                  .findFirst();
+
+            SmartWatch.getSubsequentInstance().ReleasePlayerLock();
+
+            if(shortestEndpointD.isPresent())
+            {
+                shortestOtherPlayerDistance = new SimpleEntry(shortestEndpointD.get().getKey(), shortestEndpointD.get().getValue());
+                break;
+            }
+            else
+            {
+                timeoutCounter += 5000;
+                wait(5000); //5s
+            }
+        }         
         
         return shortestOtherPlayerDistance;
     }

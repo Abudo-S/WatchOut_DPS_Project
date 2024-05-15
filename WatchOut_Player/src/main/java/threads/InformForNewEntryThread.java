@@ -17,21 +17,21 @@ import services.PlayerServiceOuterClass.InformNewPlayerResponse;
 public class InformForNewEntryThread extends Thread
 {
     private String remotePlayerEndpoint;
-    private String currentPlayerEndpoint;
     private SmartWatch smartWatch;
+    private String currentPlayerEndpoint;
     
     public InformForNewEntryThread(String remotePlayerEndpoint, SmartWatch smartWatch, String currentPlayerEndpoint)
     {
         this.remotePlayerEndpoint = remotePlayerEndpoint;
-        this.currentPlayerEndpoint = currentPlayerEndpoint;
         this.smartWatch = smartWatch;
+        this.currentPlayerEndpoint = currentPlayerEndpoint;
     }
     
     @Override
     public void run()
     {
         try
-        {
+        {            
             Player player = this.smartWatch.getPlayer();
             
             //init grpc service client
@@ -47,12 +47,15 @@ public class InformForNewEntryThread extends Thread
 
             InformNewPlayerResponse response = stub.informNewPlayer(request);
 
-            player.AcquireOtherPlayerLock(request.getNewPlayerEndpoint());
-            //add new otherPlayer
-            player.upsertOtherPlayer(request.getNewPlayerEndpoint(),
-                    new Player(0, new int[] {response.getPositionX(), response.getPositionY()}, PlayerStatus.valueOf(response.getStatus()))
-            );
-            player.ReleaseOtherPlayerLock(request.getNewPlayerEndpoint());
+            player.AcquireOtherPlayerLock(this.remotePlayerEndpoint);
+            //get otherPlayer
+            Player otherPlayer = player.getOtherPlayer(this.remotePlayerEndpoint);
+            otherPlayer.setPosition(new int[] {response.getPositionX(), response.getPositionY()});
+            otherPlayer.setStatus(PlayerStatus.valueOf(response.getStatus()));
+            
+            //update otherPlayer data
+            player.upsertOtherPlayer(this.remotePlayerEndpoint, otherPlayer);
+            player.ReleaseOtherPlayerLock(this.remotePlayerEndpoint);
             
             //printing the answer
             //System.out.println(response.toString());
@@ -62,7 +65,7 @@ public class InformForNewEntryThread extends Thread
         }
         catch(Exception e)
         {
-            System.err.println("In run: " + e.getMessage());
+            System.err.println("In run with remotePlayerEndpoint: " + this.remotePlayerEndpoint + ", msg: " +  e.getMessage());
             e.printStackTrace();
         }
     }
