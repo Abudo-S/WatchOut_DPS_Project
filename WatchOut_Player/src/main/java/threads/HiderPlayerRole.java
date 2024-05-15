@@ -13,9 +13,11 @@ public class HiderPlayerRole extends PlayerRoleThread
 {
     private static final double TIME_TO_WAIT_OUT_HB = 10000; //10s
     
-    public HiderPlayerRole(SmartWatch smartWatch, String playerEndPoint, double playerSpeed)
+    public HiderPlayerRole(String playerEndPoint, double playerSpeed)
     {
-        super(smartWatch, playerEndPoint, playerSpeed);
+        super(playerEndPoint, playerSpeed);
+        
+        System.err.println("Started hider role.");
     }
 
     /**
@@ -37,7 +39,7 @@ public class HiderPlayerRole extends PlayerRoleThread
             //permission acquired
             //inform changed status to Moving
             
-            Double distance = Player.getMinDistanceToHB(this.smartWatch.getPlayer().getPosition());
+            Double distance = Player.getMinDistanceToHB(SmartWatch.getSubsequentInstance().getPlayer().getPosition());
             
             //wait the time required to reach the home base
             wait((long) Math.ceil(distance / this.playerSpeed));

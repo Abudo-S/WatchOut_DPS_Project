@@ -13,7 +13,8 @@ import manager.SmartWatch;
 public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
 {
 
-    public void InformNewPlayer(PlayerServiceOuterClass.InformNewPlayerRequest request, StreamObserver<PlayerServiceOuterClass.InformNewPlayerResponse> responseObserver)
+    @Override
+    public void informNewPlayer(PlayerServiceOuterClass.InformNewPlayerRequest request, StreamObserver<PlayerServiceOuterClass.InformNewPlayerResponse> responseObserver)
     {
         try
         {
@@ -22,12 +23,12 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
             SmartWatch smartWatch = SmartWatch.getSubsequentInstance();
             Player player = smartWatch.getPlayer();
 
-            player.AcquireOtherPlayerLock(request.getNewPlayerEndpoint());
+            smartWatch.AcquirePlayerLock();
             //add new otherPlayer
             player.upsertOtherPlayer(request.getNewPlayerEndpoint(),
                     new Player(0, new int[] {request.getPositionX(), request.getPositionY()}, PlayerStatus.Active)
             );
-            player.ReleaseOtherPlayerLock(request.getNewPlayerEndpoint());
+            smartWatch.ReleasePlayerLock();
 
             //prepare response
             PlayerServiceOuterClass.InformNewPlayerResponse response = PlayerServiceOuterClass.InformNewPlayerResponse.newBuilder()
@@ -59,10 +60,11 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
      * @param request
      * @param responseObserver 
      */
-    public void CanIbeSeekerRequest(PlayerServiceOuterClass.CanIbeSeekerRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
+    @Override
+    public void canIbeSeeker(PlayerServiceOuterClass.CanIbeSeekerRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
         try
         {
-            System.out.println("Invoked CanIbeSeekerRequest with request: " + request);
+            System.out.println("Invoked canIbeSeeker with request: " + request);
         
             Player currentPlayer = SmartWatch.getSubsequentInstance().getPlayer();
             boolean isAgreed;
@@ -79,6 +81,9 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
                 isAgreed = currentPlayer.compareCloserDistanceToHB(new int[] {request.getPositionX(), request.getPositionY()}, request.getPlayerId());
             }
             
+            if(isAgreed)
+                SmartWatch.getSubsequentInstance().setIsCanBeSeeker(false);
+            
             //prepare response
             PlayerServiceOuterClass.GenericResultResponse response = PlayerServiceOuterClass.GenericResultResponse.newBuilder()
                                                                         .setResult(isAgreed)
@@ -89,7 +94,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
         }
         catch (Exception e)
         {
-            System.err.println("In CanIbeSeekerRequest: " + e.getMessage());
+            System.err.println("In canIbeSeeker: " + e.getMessage());
             e.printStackTrace();
         }
         finally
@@ -107,7 +112,8 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
      * @param request
      * @param responseObserver 
      */
-    public void InformGameTermination(PlayerServiceOuterClass.InformGameTerminationRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
+    @Override
+    public void informGameTermination(PlayerServiceOuterClass.InformGameTerminationRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
         try
         {
             System.out.println("Invoked InformGameTermination with request: " + request);
@@ -134,7 +140,8 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
         }
     }
     
-    public StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest> ChangePositionOrStatusStream(StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
+    @Override
+    public StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest> changePositionOrStatusStream(StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
 
         //the client will write on this stream
         return new StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest>() 
@@ -147,20 +154,30 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
                 
                 try 
                 {
-                    System.out.println("Invoked CanIbeSeekerRequest with request: " + clientMessage);
+                    System.out.println("Invoked changePositionOrStatusStream with request: " + clientMessage);
                     
-                    Player player = SmartWatch.getSubsequentInstance().getPlayer();
+                    SmartWatch smartWatch = SmartWatch.getSubsequentInstance();
+                    Player player = smartWatch.getPlayer();
                     
-                    player.AcquireOtherPlayerLock(clientMessage.getTargetEndpoint());
-                    Player otherPlayer = player.getOtherPlayer(clientMessage.getTargetEndpoint());
-                    
-                    //update otherPlayer data.
-                    otherPlayer.setStatus(PlayerStatus.valueOf(clientMessage.getStatus()));
-                    otherPlayer.setPosition(new int[] {clientMessage.getPositionX(), clientMessage.getPositionY()});
-                    
-                    player.upsertOtherPlayer(clientMessage.getTargetEndpoint(), otherPlayer);
-                    player.ReleaseOtherPlayerLock(clientMessage.getTargetEndpoint());
-                    
+                    if(clientMessage.getTargetEndpoint().equals(smartWatch.getGrpcEndpoint()))//local player
+                    {
+                        smartWatch.AcquirePlayerLock();
+                        smartWatch.getPlayer().setStatus(PlayerStatus.valueOf(clientMessage.getStatus()));
+                        smartWatch.ReleasePlayerLock();
+                    }
+                    else //otherPlayer
+                    {
+                        player.AcquireOtherPlayerLock(clientMessage.getTargetEndpoint());
+                        Player otherPlayer = player.getOtherPlayer(clientMessage.getTargetEndpoint());
+
+                        //update otherPlayer data.
+                        otherPlayer.setStatus(PlayerStatus.valueOf(clientMessage.getStatus()));
+                        otherPlayer.setPosition(new int[] {clientMessage.getPositionX(), clientMessage.getPositionY()});
+
+                        player.upsertOtherPlayer(clientMessage.getTargetEndpoint(), otherPlayer);
+                        player.ReleaseOtherPlayerLock(clientMessage.getTargetEndpoint());
+                    }
+ 
                     result = true;
                 }
                 catch (Exception e) 

@@ -9,13 +9,11 @@ import manager.SmartWatch;
 
 public abstract class PlayerRoleThread extends Thread
 {
-    protected SmartWatch smartWatch;
     protected String playerEndPoint;
     protected double playerSpeed;
     
-    public PlayerRoleThread(SmartWatch smartWatch, String playerEndPoint, double playerSpeed)
+    public PlayerRoleThread(String playerEndPoint, double playerSpeed)
     {
-        this.smartWatch = smartWatch;
         this.playerEndPoint = playerEndPoint;
         this.playerSpeed = playerSpeed;
     }

@@ -16,14 +16,12 @@ import services.PlayerServiceOuterClass.GenericResultResponse;
 public class AskToBeSeekerThread extends Thread
 {
     private String remotePlayerEndpoint;
-    private SmartWatch smartWatch;
     private volatile boolean isCompletedSuccessfully = false;
     private volatile boolean agreementResult = false;
     
-    public AskToBeSeekerThread(String remotePlayerEndpoint, SmartWatch smartWatch)
+    public AskToBeSeekerThread(String remotePlayerEndpoint)
     {
         this.remotePlayerEndpoint = remotePlayerEndpoint;
-        this.smartWatch = smartWatch;
     }
     
     @Override
@@ -31,9 +29,9 @@ public class AskToBeSeekerThread extends Thread
     {
         try
         {
-            System.out.println("Invoked informPositionAndStatus with remotePlayerEndpoint: " + remotePlayerEndpoint);
+            System.out.println("Invoked AskToBeSeekerThread with remotePlayerEndpoint: " + remotePlayerEndpoint);
             
-            Player player = this.smartWatch.getPlayer();
+            Player player = SmartWatch.getSubsequentInstance().getPlayer();
             
             //init grpc service client
             final ManagedChannel channel = ManagedChannelBuilder.forTarget(this.remotePlayerEndpoint).usePlaintext().build();
@@ -58,7 +56,7 @@ public class AskToBeSeekerThread extends Thread
         }
         catch(Exception e)
         {
-            System.err.println("In run: " + e.getMessage());
+            System.err.println("In run with remotePlayerEndpoint: " + this.remotePlayerEndpoint + ", msg: " +  e.getMessage());
             e.printStackTrace();
         }
         

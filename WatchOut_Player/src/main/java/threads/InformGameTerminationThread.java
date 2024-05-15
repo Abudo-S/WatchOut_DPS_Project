@@ -18,13 +18,11 @@ public class InformGameTerminationThread extends Thread
 {
     private String remotePlayerEndpoint;
     private String currentPlayerEndpoint;
-    private SmartWatch smartWatch;
     
-    public InformGameTerminationThread(String remotePlayerEndpoint, SmartWatch smartWatch, String currentPlayerEndpoint)
+    public InformGameTerminationThread(String remotePlayerEndpoint, String currentPlayerEndpoint)
     {
         this.remotePlayerEndpoint = remotePlayerEndpoint;
         this.currentPlayerEndpoint = currentPlayerEndpoint;
-        this.smartWatch = smartWatch;
     }
     
     @Override
@@ -51,7 +49,7 @@ public class InformGameTerminationThread extends Thread
         }
         catch(Exception e)
         {
-            System.err.println("In run: " + e.getMessage());
+            System.err.println("In run with remotePlayerEndpoint: " + this.remotePlayerEndpoint + ", msg: " +  e.getMessage());
             e.printStackTrace();
         }
     }

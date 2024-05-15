@@ -25,11 +25,18 @@ public class SmartWatch
     private MonitorHrValuesThread monitorHrValues_thread;
     private CustomLock playerLock;
     
+    /**
+     * it will be false when this player send seekerAgreement to another player.
+     * when false, it prevents sending further canIbeSeekerRequest.
+     */
+    private volatile boolean isCanBeSeeker = true;
+    
     private static SmartWatch instance;
     
-    private SmartWatch(Player player, CheckToSendHrAvgsThread checkToSendHrAvgs_thread)
+    private SmartWatch(Player player, String grpcServiceEndpoint, CheckToSendHrAvgsThread checkToSendHrAvgs_thread)
     {
         this.player = player;
+        this.grpcServiceEndpoint = grpcServiceEndpoint;
         this.playerLock = new CustomLock();
         HRSimulator hrSimulator_thread = new HRSimulator("Player-" + this.player.getId(), new HRSimulatorBuffer());
         monitorHrValues_thread = new MonitorHrValuesThread(0, hrSimulator_thread, checkToSendHrAvgs_thread);
@@ -37,6 +44,8 @@ public class SmartWatch
         monitorHrValues_thread.start();
         
         informNewEntry();
+        
+        System.err.println("Initialized smartWatch with playerId: " + this.player.toString());
     }
     
     /**
@@ -84,9 +93,12 @@ public class SmartWatch
 
             for(String endpoint : otherPlayersEndsPoints)
             {
-                AskToBeSeekerThread askToBeSeeker_thread = new AskToBeSeekerThread(endpoint, this);
-                askToBeSeeker_thread.start();
-                gatheredThreads.add(askToBeSeeker_thread);
+                if(isCanBeSeeker)
+                {
+                    AskToBeSeekerThread askToBeSeeker_thread = new AskToBeSeekerThread(endpoint);
+                    askToBeSeeker_thread.start();
+                    gatheredThreads.add(askToBeSeeker_thread);
+                } 
             }
             
             //We need to wait for all threads' results to determine current player's role
@@ -104,12 +116,13 @@ public class SmartWatch
             
             if(finalAgreedSeeker)
             {
-                SeekerPlayerRole seekerRole_thread = new SeekerPlayerRole(this, this.grpcServiceEndpoint, PLAYER_SPEED_UNITS);
+                SeekerPlayerRole seekerRole_thread = new SeekerPlayerRole(this.grpcServiceEndpoint, PLAYER_SPEED_UNITS);
                 seekerRole_thread.start();
             }
-            else
+            else //hider
             {
-                //start hider thread
+                HiderPlayerRole hiderRole_thread = new HiderPlayerRole(this.grpcServiceEndpoint, PLAYER_SPEED_UNITS);
+                hiderRole_thread.start();
             }
         }
         catch(Exception e)
@@ -134,7 +147,7 @@ public class SmartWatch
 
             for(String endpoint : otherPlayersEndsPoints)
             {
-                InformForNewEntryThread informGameTerm_thread = new InformForNewEntryThread(endpoint, this, this.grpcServiceEndpoint);
+                InformGameTerminationThread informGameTerm_thread = new InformGameTerminationThread(endpoint, this.grpcServiceEndpoint);
                 informGameTerm_thread.start();
             }
         }
@@ -163,7 +176,7 @@ public class SmartWatch
 
             for(String endpoint : otherPlayersEndsPoints)
             {
-                InformPlayerChangedThread informPlayerChanged_thread = new InformPlayerChangedThread(endpoint, this, changedPlayerEndPoint, changedPlayer, isSentBySeeker);
+                InformPlayerChangedThread informPlayerChanged_thread = new InformPlayerChangedThread(endpoint, changedPlayerEndPoint, changedPlayer, isSentBySeeker);
                 informPlayerChanged_thread.start();
             }
         }
@@ -200,6 +213,11 @@ public class SmartWatch
 //        this.playerLock.Release();
 //    }
     
+    public void setIsCanBeSeeker(boolean isCanBeSeeker)
+    {
+        this.isCanBeSeeker = isCanBeSeeker;
+    }
+    
     public String getGrpcEndpoint()
     {
         return this.grpcServiceEndpoint;
@@ -226,10 +244,10 @@ public class SmartWatch
      * singleton pattern
      * @return instance
      */
-    public static SmartWatch getInstance(Player player, CheckToSendHrAvgsThread checkToSendHrAvgs_thread)
+    public static SmartWatch getInstance(Player player, String grpcServiceEndpoint, CheckToSendHrAvgsThread checkToSendHrAvgs_thread)
     {
         if(instance == null)
-            instance = new SmartWatch(player, checkToSendHrAvgs_thread);
+            instance = new SmartWatch(player, grpcServiceEndpoint, checkToSendHrAvgs_thread);
         
         return instance;
     }

@@ -196,7 +196,7 @@ public class Player
     @Override
     public String toString()
     {
-        return "id: " + this.id + ", status : " + this.status + ", position: " + Arrays.toString(this.position);
+        return "id: " + this.id + ", status : " + this.status + ", position: " + Arrays.toString(this.position) + ", otherPlayers: " + String.join(", ", this.otherPlayers.keySet());
     }
 
 }

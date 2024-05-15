@@ -43,15 +43,15 @@ public class PlayerManager
     
     private static PlayerManager instance;
     
-    public PlayerManager (String grpcServiceEndpoint)
+    public PlayerManager(String grpcServiceEndpoint)
     {
         if(grpcServiceEndpoint == null)
             throw new NullPointerException("Can't initialize PlayerManager with null grpcServiceEndpoint!");
         
         this.broker = "tcp://localhost:1883";
         this.clientId = MqttClient.generateClientId();
-        this.gameSubTopic = "home/state/game";
-        this.customSubTopic = "home/custom/game";
+        this.gameSubTopic = "home/game/state";
+        this.customSubTopic = "home/game/custom";
         this.subQos = 2;
         
         Gson jsonSerializer = new Gson();
@@ -61,8 +61,8 @@ public class PlayerManager
         this.persistentPlayerReg_thread = new PersistentPlayerRegistrationThread(client, serverAddress, jsonSerializer, 0, grpcServiceEndpoint);
         this.persistentPlayerReg_thread.start();
         
-        checkAndStartSmartWatch(client, serverAddress, jsonSerializer);
-        connectMqttBroker();
+        checkAndStartSmartWatch(grpcServiceEndpoint, client, serverAddress, jsonSerializer);
+        new Thread(() -> connectMqttBroker()).start();
     }
     
     /**
@@ -71,7 +71,7 @@ public class PlayerManager
      * @param serverAddress
      * @param jsonSerializer 
      */
-    private synchronized void checkAndStartSmartWatch(Client client, String serverAddress, Gson jsonSerializer)
+    private synchronized void checkAndStartSmartWatch(String grpcServiceEndpoint, Client client, String serverAddress, Gson jsonSerializer)
     {
         try
         {
@@ -85,7 +85,7 @@ public class PlayerManager
                 throw new NullPointerException("Can't get buildPlayer!");
             }
             
-            this.smartWatch = SmartWatch.getInstance(player, new CheckToSendHrAvgsThread(client, serverAddress, jsonSerializer, 0, player.getId()));
+            this.smartWatch = SmartWatch.getInstance(player, grpcServiceEndpoint, new CheckToSendHrAvgsThread(client, serverAddress, jsonSerializer, 0, player.getId()));
         }
         catch (Exception e)
         {
@@ -94,17 +94,33 @@ public class PlayerManager
         }
     }
     
-    private void connectMqttBroker()
+    private synchronized void connectMqttBroker()
     {
         try
         {
-            this.client = new MqttClient(broker, clientId);
-            MqttConnectOptions connOpts = new MqttConnectOptions();
-            connOpts.setCleanSession(true);
+            boolean isConnected = false;
+            
+            while(!isConnected)
+            {
+                try
+                {
+                    this.client = new MqttClient(broker, clientId);
+                    MqttConnectOptions connOpts = new MqttConnectOptions();
+                    connOpts.setCleanSession(true);
 
-            System.out.println(clientId + " - Connecting Broker " + broker);
-            client.connect(connOpts);
-            System.out.println(clientId + " - Connected");
+                    System.out.println(clientId + " - Connecting Broker " + broker);
+                    client.connect(connOpts);
+                    System.out.println(clientId + " - Connected");
+                    isConnected = true;
+                }
+                catch (MqttException mqttE) 
+                {
+                    System.err.println("In connectMqttBroker: reason " + mqttE.getReasonCode() + ", cause: " + mqttE.getCause() + ", msg: " + mqttE.getMessage());
+                    mqttE.printStackTrace();
+                    System.out.println("Retrying after 10s ...");
+                    wait(10000);
+                } 
+            }
             
             client.setCallback(new MqttCallback()
             {

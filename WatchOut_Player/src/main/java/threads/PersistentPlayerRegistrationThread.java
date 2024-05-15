@@ -50,7 +50,7 @@ public class PersistentPlayerRegistrationThread extends RestPeriodicThread
                 if(responseStatus.getStatusCode() == Response.Status.OK.getStatusCode())
                 {
                     String response = clientResponse.getEntity(String.class);
-                    AddPlayerResponse addPlayerResponse = jsonSerializer.fromJson(response, AddPlayerResponse.class);
+                    AddPlayerResponse addPlayerResponse = jsonSerializer.fromJson(response.replaceAll("\\\\\"",""), AddPlayerResponse.class);
                 
                     //intially after registration the player is active
                     this.builtPlayer = new Player(addPlayerResponse.getPlayerId(), addPlayerResponse.getPlayerCoordinates(), PlayerStatus.Active);

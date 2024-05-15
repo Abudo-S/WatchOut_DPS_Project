@@ -16,14 +16,12 @@ public class InformPlayerChangedThread extends Thread
 {
     private String remotePlayerEndpoint;
     private String changedPlayerEndPoint;
-    private SmartWatch smartWatch;
     private Player changedPlayer;
     private boolean isSentBySeeker;
     
-    public InformPlayerChangedThread(String remotePlayerEndpoint, SmartWatch smartWatch, String changedPlayerEndPoint, Player changedPlayer, boolean isSentBySeeker)
+    public InformPlayerChangedThread(String remotePlayerEndpoint, String changedPlayerEndPoint, Player changedPlayer, boolean isSentBySeeker)
     {
         this.remotePlayerEndpoint = remotePlayerEndpoint;
-        this.smartWatch = smartWatch;
         this.changedPlayerEndPoint = changedPlayerEndPoint;
         this.changedPlayer = changedPlayer;
         this.isSentBySeeker = isSentBySeeker;
@@ -54,7 +52,7 @@ public class InformPlayerChangedThread extends Thread
         }
         catch(Exception e)
         {
-            System.err.println("In run: " + e.getMessage());
+            System.err.println("In run with remotePlayerEndpoint: " + this.remotePlayerEndpoint + ", msg: " +  e.getMessage());
             e.printStackTrace();
         }
     }
