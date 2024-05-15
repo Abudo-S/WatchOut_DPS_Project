@@ -39,7 +39,7 @@ public class CheckToStopGameThread extends RestPeriodicThread
                     continue;
                 }
                 
-                System.out.println("CheckToStopGameThread: " + clientResponse.toString());
+                //System.out.println("CheckToStopGameThread: " + clientResponse.toString());
 
                 String response = clientResponse.getEntity(String.class);
                 HashMap allPlayersHrs = jsonSerializer.fromJson(response, AllPlayerHRsResponse.class).getAllPlayerHrs();

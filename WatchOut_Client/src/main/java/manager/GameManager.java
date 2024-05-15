@@ -1,19 +1,28 @@
 package manager;
 
+import com.google.gson.Gson;
+import com.sun.jersey.api.client.Client;
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import threads.CheckToStartGameThread;
+import threads.CheckToStopGameThread;
+import threads.PersistentGetAllPlayersThread;
+import threads.PersistentGetAvgNHrsThread;
+import threads.PersistentGetTotalAvgTsHrsThread;
 
 
 public class GameManager
 {
-    private static final int MinimumPlayersNum_toStart = 4;
+    private static final int MinimumPlayersNum_toStart = 2;
     private static final double MinimumPlayerHRRatio_toStop = 0.05;
     private static final String START_GAME = "START_GAME";
     private static final String STOP_GAME = "STOP_GAME";
+    private static final String SERVER_HOST = "localhost";
+    private static final int SERVER_PORT = 1337;
     
     private String broker;
     private String clientId;
@@ -35,30 +44,57 @@ public class GameManager
     {
         this.broker = "tcp://localhost:1883";
         this.clientId = MqttClient.generateClientId();
-        this.gamePubTopic = "home/state/game";
-        this.customPubTopic = "home/custom/game";
+        this.gamePubTopic = "home/game/state";
+        this.customPubTopic = "home/game/custom";
         this.pubQos = 2;
+        this.allPlayerHistoricalHrs = new HashMap();
+        
+        Gson jsonSerializer = new Gson();
+        Client client = Client.create();
+        String serverAddress = "http://" + SERVER_HOST + ":" + SERVER_PORT + "/";
         
         connectMqttBroker();
+        
+        CheckToStartGameThread CheckToStart_thread = new CheckToStartGameThread(client, serverAddress, jsonSerializer, 0);
+        CheckToStopGameThread CheckToStop_thread = new CheckToStopGameThread(client, serverAddress, jsonSerializer, 0);
+        //SendCustomMsgToPlayersThread custom_thread = new SendCustomMsgToPlayersThread("Hello, this is custom!", false, 0);
+        
+        //start rest threads
+        CheckToStart_thread.start();
+        CheckToStop_thread.start();
+        
+        //start custom thread
+        //custom_thread.start();
     }
 
-    private void connectMqttBroker()
+    private synchronized void connectMqttBroker()
     {
+        boolean isConnected = false;
+        
         try
         {
-            this.client = new MqttClient(broker, clientId);
-            MqttConnectOptions connOpts = new MqttConnectOptions();
-            connOpts.setCleanSession(true);
+            while(!isConnected)
+            {
+                try
+                {
+                    this.client = new MqttClient(broker, clientId);
+                    MqttConnectOptions connOpts = new MqttConnectOptions();
+                    connOpts.setCleanSession(true);
 
-            System.out.println(clientId + " - Connecting Broker " + broker);
-            client.connect(connOpts);
-            System.out.println(clientId + " - Connected");
+                    System.out.println(clientId + " - Connecting Broker " + broker);
+                    client.connect(connOpts);
+                    System.out.println(clientId + " - Connected");
+                    isConnected = true;
+                }
+                catch (MqttException mqttE) 
+                {
+                    System.err.println("In connectMqttBroker: reason " + mqttE.getReasonCode() + ", cause: " + mqttE.getCause() + ", msg: " + mqttE.getMessage());
+                    mqttE.printStackTrace();
+                    System.out.println("Retrying after 10s ...");
+                    wait(10000);
+                } 
+            }
         }
-        catch (MqttException mqttE) 
-        {
-            System.err.println("In connectMqttBroker: reason " + mqttE.getReasonCode() + ", cause: " + mqttE.getCause() + ", msg: " + mqttE.getMessage());
-            mqttE.printStackTrace();
-        } 
         catch (Exception e) 
         {
             System.err.println("In connectMqttBroker: " + e.getMessage());
@@ -81,7 +117,9 @@ public class GameManager
                 //start the game
                 sendMqttMessage(this.gamePubTopic, this.pubQos, START_GAME);
                 
-                System.out.println("Game started with playersNum: " + playersNum);
+                System.out.println("Game started with playersNum: " + playersNum + ", timestamp: " + System.currentTimeMillis());
+                
+                return true;
             }
         }
         catch (Exception e) 
@@ -194,6 +232,33 @@ public class GameManager
         } 
     }
         
+    public PersistentGetAllPlayersThread preparePersistentGetAllPlayersThread()
+    {
+        Gson jsonSerializer = new Gson();
+        Client client = Client.create();
+        String serverAddress = "http://" + SERVER_HOST + ":" + SERVER_PORT + "/";
+        
+        return new PersistentGetAllPlayersThread(client, serverAddress, jsonSerializer, 0);
+    }
+    
+    public PersistentGetAvgNHrsThread preparePersistentGetAvgNHrsThread(int playerId, int n)
+    {
+        Gson jsonSerializer = new Gson();
+        Client client = Client.create();
+        String serverAddress = "http://" + SERVER_HOST + ":" + SERVER_PORT + "/";
+        
+        return new PersistentGetAvgNHrsThread(client, serverAddress, jsonSerializer, 0, playerId, n);
+    }
+    
+    public PersistentGetTotalAvgTsHrsThread preparePersistentGetTotalAvgTsHrsThread(long ts1, long ts2)
+    {
+        Gson jsonSerializer = new Gson();
+        Client client = Client.create();
+        String serverAddress = "http://" + SERVER_HOST + ":" + SERVER_PORT + "/";
+        
+        return new PersistentGetTotalAvgTsHrsThread(client, serverAddress, jsonSerializer, 0, ts1, ts2);
+    }
+            
     /**
      * singleton pattern
      * @return instance

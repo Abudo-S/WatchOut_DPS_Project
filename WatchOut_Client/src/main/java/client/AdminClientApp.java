@@ -1,36 +1,15 @@
 package client;
 
 import threads.*;
-import com.google.gson.Gson;
-import com.sun.jersey.api.client.Client;
 import java.io.IOException;
 import java.util.Scanner;
+import manager.GameManager;
 
-public class AdminClient 
+public class AdminClientApp 
 {
-    private static final String SERVER_HOST = "localhost";
-    private static final int SERVER_PORT = 1337;
-    private static Gson jsonSerializer;
-    private static Client client;
-    private static String serverAddress;
-    
     public static void main(String[] argv)
     {
-        jsonSerializer = new Gson();
-        client = Client.create();
-        serverAddress = "http://" + SERVER_HOST + ":" + SERVER_PORT + "/";
-        
-//        CheckToStartGameThread CheckToStart_thread = new CheckToStartGameThread(client, serverAddress, jsonSerializer, 0);
-//        CheckToStopGameThread CheckToStop_thread = new CheckToStopGameThread(client, serverAddress, jsonSerializer, 0);
-//        //SendCustomMsgToPlayersThread custom_thread = new SendCustomMsgToPlayersThread("Hello, this is custom!", false, 0);
-//        
-//        //start rest threads
-//        CheckToStart_thread.start();
-//        CheckToStop_thread.start();
-        
-        //start custom thread
-        //custom_thread.start();
-        
+        GameManager.getInstance();
         startCLI_menu();
     }
     
@@ -57,7 +36,7 @@ public class AdminClient
                 switch(option)
                 {
                     case (1):
-                        PersistentGetAllPlayersThread getAllPlayers = new PersistentGetAllPlayersThread(client, serverAddress, jsonSerializer, 0);
+                        PersistentGetAllPlayersThread getAllPlayers = GameManager.getInstance().preparePersistentGetAllPlayersThread();
                         getAllPlayers.start();
 
                         while (!getAllPlayers.checkIsCompleted())
@@ -75,7 +54,7 @@ public class AdminClient
                         System.out.println("Insert N:");
                         int n = sc.nextInt();
                         
-                        PersistentGetAvgNHrsThread getAvgNHrsPlayers = new PersistentGetAvgNHrsThread(client, serverAddress, jsonSerializer, 0, playerId, n);
+                        PersistentGetAvgNHrsThread getAvgNHrsPlayers = GameManager.getInstance().preparePersistentGetAvgNHrsThread(playerId, n);
                         getAvgNHrsPlayers.start();
 
                         while (!getAvgNHrsPlayers.checkIsCompleted())
@@ -92,7 +71,7 @@ public class AdminClient
                         System.out.println("Insert higher-bound timestamp:");
                         long ts2 = sc.nextLong();
                         
-                        PersistentGetTotalAvgTsHrsThread getPlayerAvgTsHrs = new PersistentGetTotalAvgTsHrsThread(client, serverAddress, jsonSerializer, 0, ts1, ts2);
+                        PersistentGetTotalAvgTsHrsThread getPlayerAvgTsHrs = GameManager.getInstance().preparePersistentGetTotalAvgTsHrsThread(ts1, ts2);
                         getPlayerAvgTsHrs.start();
 
                         while (!getPlayerAvgTsHrs.checkIsCompleted())

@@ -39,7 +39,7 @@ public class CheckToStartGameThread extends RestPeriodicThread
                     continue;
                 }
                 
-                System.out.println("CheckToStartGameThread: " + clientResponse.toString());
+                //System.out.println("CheckToStartGameThread: " + clientResponse.toString());
 
                 String response = clientResponse.getEntity(String.class);
                 int playersNum = Integer.parseInt(jsonSerializer.fromJson(response, GenericRestResponse.class).getResult());

@@ -54,7 +54,7 @@ public class PersistentGetTotalAvgTsHrsThread extends RestPeriodicThread
                 if(responseStatus.getStatusCode() == Response.Status.OK.getStatusCode())
                 {
                     String response = clientResponse.getEntity(String.class);
-                    GenericRestResponse genericRestResponse = jsonSerializer.fromJson(response, GenericRestResponse.class);
+                    GenericRestResponse genericRestResponse = jsonSerializer.fromJson(response.replaceAll("\\\\\"",""), GenericRestResponse.class);
                     this.result = Double.parseDouble(genericRestResponse.getResult());
                 
                     break;

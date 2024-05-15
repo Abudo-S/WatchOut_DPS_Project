@@ -47,7 +47,7 @@ public class PersistentGetAllPlayersThread extends RestPeriodicThread
                 if(responseStatus.getStatusCode() == Response.Status.OK.getStatusCode())
                 {
                     String response = clientResponse.getEntity(String.class);
-                    this.response = jsonSerializer.fromJson(response, GetAllPlayersResponse.class);
+                    this.response = jsonSerializer.fromJson(response.replaceAll("\\\\\"",""), GetAllPlayersResponse.class);
                 
                     break;
                 }
