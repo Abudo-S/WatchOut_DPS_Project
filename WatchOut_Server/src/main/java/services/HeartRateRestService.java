@@ -18,7 +18,7 @@ public class HeartRateRestService
     {
         try
         {
-            System.out.println("Invoked getPlayerAvgNHrs with playerId: " + playerId + ", n: " + n);
+            //System.out.println("Invoked getPlayerAvgNHrs with playerId: " + playerId + ", n: " + n);
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
 
@@ -41,7 +41,7 @@ public class HeartRateRestService
     {
         try
         {
-            System.out.println("Invoked getPlayerAvgTimestampedHrs with t1: " + ts1 + ", t2: " + ts2);
+            //System.out.println("Invoked getPlayerAvgTimestampedHrs with t1: " + ts1 + ", t2: " + ts2);
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
 
@@ -63,7 +63,7 @@ public class HeartRateRestService
     {
         try
         {
-            System.out.println("Invoked getPlayersHRs");
+            //System.out.println("Invoked getPlayersHRs");
         
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
             

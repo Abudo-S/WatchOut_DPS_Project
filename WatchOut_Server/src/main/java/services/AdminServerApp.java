@@ -5,8 +5,8 @@ import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
 
-public class App {
-
+public class AdminServerApp 
+{
     private static final String HOST = "localhost";
     private static final int PORT = 1337;
 
