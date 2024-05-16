@@ -26,7 +26,7 @@ public class PersistentGetAvgNHrsThread extends RestPeriodicThread
     }
     
     @Override
-    public synchronized void run()
+    public void run()
     {
         try
         {
@@ -63,7 +63,7 @@ public class PersistentGetAvgNHrsThread extends RestPeriodicThread
                     System.err.println("Couldn't process GET_PLAYER_AVG_N_HRS to the server with status: " + responseStatus);
                 
                 if (waitMilliseconds > 0)
-                    wait(waitMilliseconds);
+                    Thread.sleep(waitMilliseconds);
             }
         }
         catch (Exception e)

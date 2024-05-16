@@ -22,7 +22,7 @@ public class SendCustomMsgToPlayersThread extends Thread
     }
     
     @Override
-    public synchronized void run() 
+    public void run() 
     {
         try
         {
@@ -37,7 +37,7 @@ public class SendCustomMsgToPlayersThread extends Thread
                     break;
                 
                 if (waitMilliseconds > 0)
-                    wait(waitMilliseconds);
+                    Thread.sleep(waitMilliseconds);
             }
         }
         catch (Exception e)

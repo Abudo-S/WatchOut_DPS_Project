@@ -22,7 +22,7 @@ public class CheckToStartGameThread extends RestPeriodicThread
     }
     
     @Override
-    public synchronized void run()
+    public void run()
     {
         try
         {
@@ -43,7 +43,7 @@ public class CheckToStartGameThread extends RestPeriodicThread
 
                 String response = clientResponse.getEntity(String.class);
                 int playersNum = Integer.parseInt(jsonSerializer.fromJson(response, GenericRestResponse.class).getResult());
-
+                
                 boolean result = GameManager.getInstance().checkToStart(playersNum);
 
                 //if game is started then exit
@@ -51,7 +51,7 @@ public class CheckToStartGameThread extends RestPeriodicThread
                     break;
                 
                 if (waitMilliseconds > 0)
-                    wait(waitMilliseconds);
+                    Thread.sleep(waitMilliseconds);
             }
         }
         catch (Exception e)

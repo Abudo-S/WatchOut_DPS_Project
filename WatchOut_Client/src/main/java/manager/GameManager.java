@@ -67,7 +67,7 @@ public class GameManager
         //custom_thread.start();
     }
 
-    private synchronized void connectMqttBroker()
+    private void connectMqttBroker()
     {
         boolean isConnected = false;
         
@@ -91,7 +91,7 @@ public class GameManager
                     System.err.println("In connectMqttBroker: reason " + mqttE.getReasonCode() + ", cause: " + mqttE.getCause() + ", msg: " + mqttE.getMessage());
                     mqttE.printStackTrace();
                     System.out.println("Retrying after 10s ...");
-                    wait(10000);
+                    Thread.sleep(10000);
                 } 
             }
         }
@@ -114,6 +114,8 @@ public class GameManager
         {
             if (playersNum >= MinimumPlayersNum_toStart)
             {
+                Thread.sleep(5000); //wait for new unsubscribed registered players
+                
                 //start the game
                 sendMqttMessage(this.gamePubTopic, this.pubQos, START_GAME);
                 

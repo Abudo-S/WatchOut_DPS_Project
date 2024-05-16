@@ -22,7 +22,7 @@ public class CheckToStopGameThread extends RestPeriodicThread
     }
     
     @Override
-    public synchronized void run()
+    public void run()
     {
         try
         {
@@ -51,7 +51,7 @@ public class CheckToStopGameThread extends RestPeriodicThread
                     break;
                 
                 if (waitMilliseconds > 0)
-                    wait(waitMilliseconds);
+                    Thread.sleep(waitMilliseconds);
             }
         }
         catch (Exception e)
