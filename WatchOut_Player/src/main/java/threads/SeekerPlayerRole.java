@@ -30,7 +30,7 @@ public class SeekerPlayerRole extends PlayerRoleThread
      * time = distance / speed
      */
     @Override
-    public synchronized void run() 
+    public void run() 
     {
         try 
         {
@@ -48,12 +48,13 @@ public class SeekerPlayerRole extends PlayerRoleThread
                     break;
                 }
                 
-                long timeToReachTarget = (long) Math.ceil(playerDistanceToSeek.getValue() / this.playerSpeed);
+                long timeToReachTarget = (long) ((playerDistanceToSeek.getValue() / this.playerSpeed) * 1000);
                         
-                System.out.println("Seeking player with endpoint: " + playerDistanceToSeek.getKey() + ", time to reach him: " + timeToReachTarget);
+                System.out.println("Seeking player with endpoint: " + playerDistanceToSeek.getKey() + ", distance: " + playerDistanceToSeek.getValue() +
+                                   ", time to reach him: " + timeToReachTarget);
                     
                 //wait the time required to reach the target
-                wait(timeToReachTarget);
+                Thread.sleep(timeToReachTarget);
                 
                 Player currentPlayer = SmartWatch.getSubsequentInstance().getPlayer();
                 
@@ -89,7 +90,7 @@ public class SeekerPlayerRole extends PlayerRoleThread
      * if the seeker doesn't find any player to seek then it informs smartWatch that the game is terminated.
      * @return <otherPlayerEndpoint, distanceToRun>
      */
-    private synchronized SimpleEntry<String, Double> detectShortestOtherPlayerDistance() throws InterruptedException
+    private SimpleEntry<String, Double> detectShortestOtherPlayerDistance() throws InterruptedException
     {
         long timeoutCounter = 0;
         SimpleEntry<String, Double> shortestOtherPlayerDistance = null;
@@ -121,7 +122,7 @@ public class SeekerPlayerRole extends PlayerRoleThread
             else
             {
                 timeoutCounter += 5000;
-                wait(5000); //5s
+                Thread.sleep(5000); //5s
             }
         }         
         

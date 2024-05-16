@@ -27,7 +27,8 @@ public class SmartWatch
     
     /**
      * it will be false when this player send seekerAgreement to another player.
-     * when false, it prevents sending further canIbeSeekerRequest.
+     * when false, it prevents sending further canIbeSeekerRequest and 
+     * the current player doesn't have to wait for AskToBeSeekerThreads responses.
      */
     private volatile boolean isCanBeSeeker = true;
     
@@ -42,6 +43,7 @@ public class SmartWatch
         monitorHrValues_thread = new MonitorHrValuesThread(0, hrSimulator_thread, checkToSendHrAvgs_thread);
     
         monitorHrValues_thread.start();
+        monitorHrValues_thread.startAuxiliaryThreads();
         
         informNewEntry();
         
@@ -93,7 +95,7 @@ public class SmartWatch
 
             for(String endpoint : otherPlayersEndsPoints)
             {
-                if(isCanBeSeeker)
+                if(this.isCanBeSeeker)
                 {
                     AskToBeSeekerThread askToBeSeeker_thread = new AskToBeSeekerThread(endpoint);
                     askToBeSeeker_thread.start();
@@ -102,8 +104,9 @@ public class SmartWatch
             }
             
             //We need to wait for all threads' results to determine current player's role
+            //if the player has already agreed the seeker role for another player, so the current player knows that he'll be a hider.
             boolean resultsGathered = false;
-            while(!resultsGathered)
+            while(!resultsGathered && this.isCanBeSeeker)
             {
                 resultsGathered = !gatheredThreads.stream()
                                                   .map(m -> m.checkIsCompleted())
@@ -114,7 +117,7 @@ public class SmartWatch
                                                         .map(m -> m.getAgreementResult())
                                                         .anyMatch(m -> m.equals(false));
             
-            if(finalAgreedSeeker)
+            if(finalAgreedSeeker && this.isCanBeSeeker)
             {
                 SeekerPlayerRole seekerRole_thread = new SeekerPlayerRole(this.grpcServiceEndpoint, PLAYER_SPEED_UNITS);
                 seekerRole_thread.start();
