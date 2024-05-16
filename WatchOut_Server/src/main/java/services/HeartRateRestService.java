@@ -9,7 +9,7 @@ import manager.PlayersRegistryManager;
 
 
 @Path("heart_rate")
-public class HeartRateRestService 
+public class HeartRateRestService
 {
     @Path("get_player_avg_n_hrs/{playerId}/{n}")
     @GET
@@ -81,10 +81,12 @@ public class HeartRateRestService
     @Path("add_player_hrs")
     @POST
     @Consumes({"application/json"})
-    public Response addPlayerHrs(AddPlayerHrsRequest playerHrs)
+    public Response addPlayerHrs(String request)
     {
         try
         {
+            AddPlayerHrsRequest playerHrs = new Gson().fromJson(request.replaceAll("\\\\\"","\"").replaceAll("\"\"", "\""), AddPlayerHrsRequest.class);
+
             System.out.println("Invoked addPlayerHrs with : " + playerHrs.toString());
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();

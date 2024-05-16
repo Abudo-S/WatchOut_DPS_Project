@@ -1,5 +1,6 @@
 package beans;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Player
@@ -33,7 +34,7 @@ public class Player
     @Override
     public String toString()
     {
-        return "id: " + this.id + ", endpoint : " + this.endpoint + ", position: " + Arrays.toString(this.position);
+        return "id: " + this.id + ", endpoint : " + this.endpoint + ", position: " + String.join(",", new ArrayList(Arrays.asList(this.position)));
     }
 
 }
