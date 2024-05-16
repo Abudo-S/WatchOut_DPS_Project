@@ -18,7 +18,8 @@ public class HRSimulatorBuffer implements Buffer
     
     public HRSimulatorBuffer()
     {
-        loadedMeasurements = new ArrayList(); //maintains insertion order
+        this.loadedMeasurements = new ArrayList(); //maintains insertion order
+        this.loadedMeasurements_lock = new CustomLock();
     }
     
     /**
@@ -60,7 +61,7 @@ public class HRSimulatorBuffer implements Buffer
         
         try
         {
-            if (this.loadedMeasurements.size() < 8)
+            while (this.loadedMeasurements.size() < 8)
             {
                 wait();
             }
