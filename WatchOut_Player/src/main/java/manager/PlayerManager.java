@@ -71,12 +71,12 @@ public class PlayerManager
      * @param serverAddress
      * @param jsonSerializer 
      */
-    private synchronized void checkAndStartSmartWatch(String grpcServiceEndpoint, Client client, String serverAddress, Gson jsonSerializer)
+    private void checkAndStartSmartWatch(String grpcServiceEndpoint, Client client, String serverAddress, Gson jsonSerializer)
     {
         try
         {
             while(!this.persistentPlayerReg_thread.checkIsCompleted())
-                wait(1000);
+                Thread.sleep(1000);
             
             Player player = this.persistentPlayerReg_thread.getBuiltPlayer();
             
@@ -94,7 +94,7 @@ public class PlayerManager
         }
     }
     
-    private synchronized void connectMqttBroker()
+    private void connectMqttBroker()
     {
         try
         {
@@ -118,7 +118,7 @@ public class PlayerManager
                     System.err.println("In connectMqttBroker: reason " + mqttE.getReasonCode() + ", cause: " + mqttE.getCause() + ", msg: " + mqttE.getMessage());
                     mqttE.printStackTrace();
                     System.out.println("Retrying after 10s ...");
-                    wait(10000);
+                    Thread.sleep(10000);
                 } 
             }
             

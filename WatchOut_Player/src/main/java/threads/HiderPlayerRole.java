@@ -27,7 +27,7 @@ public class HiderPlayerRole extends PlayerRoleThread
      * time = distance / speed
      */
     @Override
-    public synchronized void run()
+    public void run()
     {
         try 
         {
@@ -42,10 +42,9 @@ public class HiderPlayerRole extends PlayerRoleThread
             Double distance = Player.getMinDistanceToHB(SmartWatch.getSubsequentInstance().getPlayer().getPosition());
             
             //wait the time required to reach the home base
-            wait((long) Math.ceil(distance / this.playerSpeed));
+            Thread.sleep((long) Math.ceil(distance / this.playerSpeed));
                 
             //to be implemented
-            
         } 
         catch(Exception e)
         {

@@ -25,7 +25,7 @@ public class PersistentPlayerRegistrationThread extends RestPeriodicThread
     }
     
     @Override
-    public synchronized void run()
+    public void run()
     {
         try
         {
@@ -62,7 +62,7 @@ public class PersistentPlayerRegistrationThread extends RestPeriodicThread
                     System.err.println("Couldn't process POST_ADD_PLAYER to the server with status: " + responseStatus);
                 
                 if (waitMilliseconds > 0)
-                    wait(waitMilliseconds);
+                    Thread.sleep(waitMilliseconds);
             }
         }
         catch (Exception e)

@@ -25,7 +25,7 @@ public class MonitorHrValuesThread extends Thread
     }
     
     @Override
-    public synchronized void run()
+    public void run()
     {
         try
         {
@@ -39,7 +39,7 @@ public class MonitorHrValuesThread extends Thread
                 this.checkToSendHrAvgs_thread.addToReservedHrAvg(measurementsAvg);
                 
                 if (waitMilliseconds > 0)
-                    wait(waitMilliseconds);
+                    Thread.sleep(waitMilliseconds);
             }
         }
         catch (Exception e)
@@ -49,7 +49,7 @@ public class MonitorHrValuesThread extends Thread
         }
     }
     
-    public void starAuxiliaryThread() 
+    public void startAuxiliaryThreads()
     {
         this.hrSimulator_thread.start();
         this.checkToSendHrAvgs_thread.start();

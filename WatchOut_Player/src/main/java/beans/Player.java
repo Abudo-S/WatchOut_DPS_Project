@@ -17,7 +17,7 @@ public class Player
     
     /**
      * Note that other players ids aren't available.
-     * volatile enables us to have a instantaneous visibility on size and keys
+     * volatile enables us to have an instantaneous visibility on size and keys
      * <player's endpoint, player>
      */
     private volatile HashMap<String, Player> otherPlayers;
@@ -57,6 +57,9 @@ public class Player
     public void upsertOtherPlayer(String endpoint, Player player) throws KeyException
     {        
         this.otherPlayers.put(endpoint, player);
+        
+        if(!this.otherPlayersLocks.containsKey(endpoint))
+            this.otherPlayersLocks.put(endpoint, new CustomLock());
     }
     
     public void setPosition(int[] position)
@@ -139,7 +142,8 @@ public class Player
         if(anotherPosition.length != 2)
             throw new NumberFormatException("Position's length sould be equal to 2!");
         
-        return Math.sqrt(((this.position[0] - anotherPosition[0])^ 2 + (this.position[1] - anotherPosition[1]) ^ 2));
+        double x =  Math.sqrt((Math.pow(this.position[0] - anotherPosition[0], 2) + Math.pow(this.position[1] - anotherPosition[1], 2)));
+        return x;
     }
     
     /**
@@ -181,7 +185,7 @@ public class Player
         int[][] playerDiffPoints = IntStream.range(0, HomeBaseCoordinates.length)
                                         .mapToObj(m -> 
                                             IntStream.range(0, HomeBaseCoordinates[m].length)
-                                            .map(m1 -> (HomeBaseCoordinates[m][m1] - playerPosition[m1]) ^ 2)
+                                            .map(m1 -> (int)Math.pow(HomeBaseCoordinates[m][m1] - playerPosition[m1], 2))
                                             .toArray()
                                         ).toArray(int[][]::new);
         

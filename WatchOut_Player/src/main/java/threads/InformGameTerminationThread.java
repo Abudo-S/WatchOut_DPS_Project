@@ -5,10 +5,7 @@
  */
 package threads;
 
-import beans.Player;
-import beans.PlayerStatus;
 import io.grpc.*;
-import manager.SmartWatch;
 import services.PlayerServiceGrpc;
 import services.PlayerServiceGrpc.PlayerServiceBlockingStub;
 import services.PlayerServiceOuterClass.InformGameTerminationRequest;

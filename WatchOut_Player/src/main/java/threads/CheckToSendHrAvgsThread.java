@@ -15,7 +15,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.StatusType;
 import manager.*;
 
-
 public class CheckToSendHrAvgsThread extends RestPeriodicThread
 {
     private static final int HR_FREQ_TIME_TO_SERVER = 10000; //10s
@@ -34,10 +33,11 @@ public class CheckToSendHrAvgsThread extends RestPeriodicThread
        super(client, serverAddress, jsonSerializer, waitMilliseconds);
        this.playerId = playerId;
        this.reservedHrAvgs = new ArrayList();
+       this.reservedHrAvgs_Lock = new CustomLock();
     }
     
     @Override
-    public synchronized void run()
+    public void run()
     {
         try
         {
@@ -54,7 +54,7 @@ public class CheckToSendHrAvgsThread extends RestPeriodicThread
                     this.reservedHrAvgs_Lock.Release();
 
                     //transmit player's hrs
-                    ClientResponse clientResponse = this.performPostRequest(this.client, url, addPlayerHrsRequest);
+                    ClientResponse clientResponse = this.performPostRequest(this.client, url, jsonSerializer.toJson(addPlayerHrsRequest));
 
                     if (clientResponse == null)
                     {
@@ -75,14 +75,14 @@ public class CheckToSendHrAvgsThread extends RestPeriodicThread
                         this.reservedHrAvgs_Lock.Release();
 
                         //apply required waiting time
-                        wait(HR_FREQ_TIME_TO_SERVER);
+                        Thread.sleep(HR_FREQ_TIME_TO_SERVER);
                     }
                     else
                         System.err.println("Couldn't send player's hr avgs to the server with status: " + responseStatus);
                 }
                 
                 if (waitMilliseconds > 0)
-                    wait(waitMilliseconds);
+                    Thread.sleep(waitMilliseconds);
             }
         }
         catch (Exception e)
