@@ -1,7 +1,6 @@
 package client;
 
 import threads.*;
-import java.io.IOException;
 import java.util.Scanner;
 import manager.GameManager;
 
@@ -20,11 +19,13 @@ public class AdminClientApp
         int option;
         Scanner sc = new Scanner(System.in);
 
-        System.out.println("1-Return all present player.");
+        System.out.println("##########################MENU##################################");
+        System.out.println("1-Return all present players.");
         System.out.println("2-Calculate the average of last N HRS for a player.");
         System.out.println("3-Calculate the average of timestamp-bounded HRS for a player.");
         System.out.println("4-Send custom message to all players.");
         System.out.println("5-Exit");
+        System.out.println("################################################################");
 
         System.out.println("Insert option number: ");
 
@@ -84,7 +85,7 @@ public class AdminClientApp
 
                     case (4):
                         System.out.println("Insert custom message:");
-                        String customMsg = sc.nextLine();
+                        String customMsg = sc.next();
                         SendCustomMsgToPlayersThread custom_thread = new SendCustomMsgToPlayersThread(customMsg, false, 0);
                         custom_thread.start();
 
@@ -100,6 +101,10 @@ public class AdminClientApp
                     case (5):
                         stopCondition = true;
                         break;
+                        
+                    default:
+                        System.out.println("Not a valid option, try again.");
+                        break;
                 }
             }
             catch(Exception e)
@@ -110,9 +115,13 @@ public class AdminClientApp
                 System.err.println("Retry option!");
                 try 
                 {
-                    System.in.read();
+                    while(sc.hasNext()) //empty the input buffer
+                        if (sc.hasNextInt())
+                            break;
+                        else
+                            sc.next();
                 }               
-                catch(IOException ex)
+                catch(Exception ex)
                 {
                     System.err.println("In startCLI_menu: " + ex.getMessage());
                 }

@@ -21,6 +21,9 @@ public class CheckToStopGameThread extends RestPeriodicThread
        super(client, serverAddress, jsonSerializer, waitMilliseconds);
     }
     
+    /**
+     * control player's hrs periodically and stop the game if necessary.
+     */
     @Override
     public void run()
     {

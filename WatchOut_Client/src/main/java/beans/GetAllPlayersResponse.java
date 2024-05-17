@@ -6,6 +6,8 @@
 package beans;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +35,8 @@ public class GetAllPlayersResponse
         String str = "";
         for(Map.Entry<Integer, SimpleEntry<String, Integer[]>> playerRecord: this.players.entrySet())
         {
-            str += "playerId: " + playerRecord.getKey() + ", endpoint: " + playerRecord.getValue().getKey() + ", initialPosition: " + playerRecord.getValue().getValue()+ "\n";
+            str += "playerId: " + playerRecord.getKey() + ", endpoint: " + playerRecord.getValue().getKey() +
+                   ", initialPosition: " + String.join(",", Arrays.toString(playerRecord.getValue().getValue())) + "\n";
         }
         
         return str;

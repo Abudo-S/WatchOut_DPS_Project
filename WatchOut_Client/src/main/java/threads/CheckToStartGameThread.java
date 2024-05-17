@@ -15,12 +15,18 @@ import manager.GameManager;
 
 public class CheckToStartGameThread extends RestPeriodicThread
 {
-
-    public CheckToStartGameThread (Client client, String serverAddress, Gson jsonSerializer, int waitMilliseconds)
+    private CheckToStopGameThread checkToStop_thread;
+    
+    public CheckToStartGameThread (Client client, String serverAddress, Gson jsonSerializer, int waitMilliseconds, CheckToStopGameThread checkToStop_thread)
     {
        super(client, serverAddress, jsonSerializer, waitMilliseconds);
+       this.checkToStop_thread = checkToStop_thread;
     }
     
+    /**
+     * continue checking if the minimum number of players to start the game is satisfied.
+     * After starting the game, it starts a CheckToStopGameThread.
+     */
     @Override
     public void run()
     {
@@ -46,9 +52,12 @@ public class CheckToStartGameThread extends RestPeriodicThread
                 
                 boolean result = GameManager.getInstance().checkToStart(playersNum);
 
-                //if game is started then exit
+                //if game is started then start checkToStop_thread and exit
                 if(result)
+                {
+                    this.checkToStop_thread.start();
                     break;
+                }    
                 
                 if (waitMilliseconds > 0)
                     Thread.sleep(waitMilliseconds);
