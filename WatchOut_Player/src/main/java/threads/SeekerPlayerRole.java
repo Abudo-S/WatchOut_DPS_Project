@@ -41,7 +41,7 @@ public class SeekerPlayerRole extends PlayerRoleThread
             
                 if(playerDistanceToSeek == null)
                 {
-                    System.err.println("No player to seeker is found! Asking smartWatch to terminate the game...");
+                    System.err.println("No player to seek is found! Asking smartWatch to terminate the game...");
                     
                     //inform game termination
                     SmartWatch.getSubsequentInstance().informGameTermination();

@@ -39,7 +39,7 @@ public class InformGameTerminationThread extends Thread
             GenericResultResponse response = stub.informGameTermination(request);
 
             //printing the answer
-            System.out.println("InformGameTerminationThread for endpoint: " + this.remotePlayerEndpoint + ", with result: " + response.toString());
+            System.out.println("InformGameTerminationThread for endpoint: " + this.remotePlayerEndpoint + ", with result: " + response.getResult());
 
             //close the channel
             channel.shutdown();

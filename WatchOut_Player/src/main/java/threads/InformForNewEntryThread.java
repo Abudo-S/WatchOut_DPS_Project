@@ -5,9 +5,11 @@
  */
 package threads;
 
+import beans.GamePhase;
 import beans.Player;
 import beans.PlayerStatus;
 import io.grpc.*;
+import manager.CustomLock;
 import manager.SmartWatch;
 import services.PlayerServiceGrpc;
 import services.PlayerServiceGrpc.PlayerServiceBlockingStub;
@@ -19,12 +21,16 @@ public class InformForNewEntryThread extends Thread
     private String remotePlayerEndpoint;
     private SmartWatch smartWatch;
     private String currentPlayerEndpoint;
+    private volatile GamePhase playerGamePhase = null;
+    private CustomLock playerGamePhaseLock;
     
     public InformForNewEntryThread(String remotePlayerEndpoint, SmartWatch smartWatch, String currentPlayerEndpoint)
     {
         this.remotePlayerEndpoint = remotePlayerEndpoint;
         this.smartWatch = smartWatch;
         this.currentPlayerEndpoint = currentPlayerEndpoint;
+        this.playerGamePhaseLock = new CustomLock();
+        this.playerGamePhaseLock.Acquire(); //be sure to acquire the playerGamePhaseLock first, so the smartWatch should wait for the value.
     }
     
     @Override
@@ -47,6 +53,9 @@ public class InformForNewEntryThread extends Thread
 
             InformNewPlayerResponse response = stub.informNewPlayer(request);
 
+            this.playerGamePhase = GamePhase.valueOf(response.getCurrentGamePhase());
+            this.playerGamePhaseLock.Release();
+            
             player.AcquireOtherPlayerLock(this.remotePlayerEndpoint);
             //get otherPlayer
             Player otherPlayer = player.getOtherPlayer(this.remotePlayerEndpoint);
@@ -68,5 +77,18 @@ public class InformForNewEntryThread extends Thread
             System.err.println("In run with remotePlayerEndpoint: " + this.remotePlayerEndpoint + ", msg: " +  e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    /**
+     * use customLock to get notified when the value is ready.
+     * @return 
+     */
+    public GamePhase getplayerGamePhase()
+    {
+        this.playerGamePhaseLock.Acquire();
+        //do nothing
+        this.playerGamePhaseLock.Release();
+        
+        return this.playerGamePhase;
     }
 }
