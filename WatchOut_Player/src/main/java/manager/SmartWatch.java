@@ -5,6 +5,7 @@
  */
 package manager;
 
+import beans.GamePhase;
 import beans.Player;
 import java.util.ArrayList;
 import java.util.Set;
@@ -26,6 +27,13 @@ public class SmartWatch
     private CustomLock playerLock;
     
     /**
+     * when a player starts, he is convinced that the current game phase is preparation.
+     * then otherPlayers informs him of the actual gamePhase as a response in InformForNewEntryThread.
+     * if at least one response of players indicate that the currentGamePhase = Main, then the player can't start its AskToBeSeekerThread.
+     */
+    private volatile GamePhase currentGamePhase = GamePhase.Preparation;
+    
+    /**
      * it will be false when this player send seekerAgreement to another player.
      * when false, it prevents sending further canIbeSeekerRequest and 
      * the current player doesn't have to wait for AskToBeSeekerThreads responses.
@@ -45,19 +53,22 @@ public class SmartWatch
         monitorHrValues_thread.start();
         monitorHrValues_thread.startAuxiliaryThreads();
         
-        informNewEntry();
-        
         System.err.println("Initialized smartWatch with playerId: " + this.player.toString());
+        
+        new Thread(() -> informNewEntry()).start();
     }
     
     /**
      * inform all other players of the new player and update their position & status
-     * one thread for each other player
+     * one thread for each other player.
+     * if it's noticed that the game is in coordination phase, so participate in the coordination phase.
+     * Otherwise the current player is automatically a hider (if and only if the game phase isn't preparation).
      */
     private void informNewEntry()
     {
         try
         {
+            ArrayList<InformForNewEntryThread> gatheredThreads = new ArrayList();
             Set<String> otherPlayersEndsPoints;
             
             this.playerLock.Acquire();
@@ -66,8 +77,25 @@ public class SmartWatch
             
             for(String endpoint : otherPlayersEndsPoints)
             {
-                InformForNewEntryThread InformForNewEntry_thread = new InformForNewEntryThread(endpoint, this, this.grpcServiceEndpoint);
-                InformForNewEntry_thread.start();
+                InformForNewEntryThread informForNewEntry_thread = new InformForNewEntryThread(endpoint, this, this.grpcServiceEndpoint);
+                informForNewEntry_thread.start();
+                gatheredThreads.add(informForNewEntry_thread);
+            }
+            
+            boolean inMainPhase = gatheredThreads.stream()
+                                                 .anyMatch(thread -> thread.getplayerGamePhase().equals(GamePhase.Main));
+            
+            boolean inPreparationPhase = gatheredThreads.stream()
+                                                        .allMatch(thread -> thread.getplayerGamePhase().equals(GamePhase.Preparation));
+            
+            if(!inMainPhase && !inPreparationPhase)
+                this.startGameCoordination(0); //partecipate in seeker coordination
+            else if(!inPreparationPhase)
+            {
+                this.currentGamePhase = GamePhase.Main;
+                
+                HiderPlayerRole hiderRole_thread = new HiderPlayerRole(this.grpcServiceEndpoint, PLAYER_SPEED_UNITS);
+                hiderRole_thread.start();
             }
         }
         catch(Exception e)
@@ -78,17 +106,26 @@ public class SmartWatch
     }
     
     /**
-     * ask to be seeker from all other players; if all other players agree then this player is the seeker.
-     * one thread for each other player
+     * ask to be seeker from all other players; if all other players agree then this player is the seeker.one thread for each other player
      * modified bully election
+     * @param waitMilliseconds
      */
-    public void startGameCoordination()
+    public void startGameCoordination(int waitMilliseconds)
     {
         try
         {    
+            System.out.println("invoked startGameCoordination with waitMilliseconds: " + waitMilliseconds);
+            
+            //change player's game phase
+            this.currentGamePhase = GamePhase.Coordination;
+            
             ArrayList<AskToBeSeekerThread> gatheredThreads = new ArrayList();
             Set<String> otherPlayersEndsPoints;
 
+            //delay coordination
+            if (waitMilliseconds > 0)
+                    Thread.sleep(waitMilliseconds);
+            
             this.playerLock.Acquire();
             otherPlayersEndsPoints = this.player.getOtherPlayers().keySet();
             this.playerLock.Release();
@@ -117,6 +154,9 @@ public class SmartWatch
                                                         .map(m -> m.getAgreementResult())
                                                         .anyMatch(m -> m.equals(false));
             
+            //since the current player knows his role so its coordination gamePhase is terminated -> Main
+            this.currentGamePhase = GamePhase.Main;
+                
             if(finalAgreedSeeker && this.isCanBeSeeker)
             {
                 SeekerPlayerRole seekerRole_thread = new SeekerPlayerRole(this.grpcServiceEndpoint, PLAYER_SPEED_UNITS);
@@ -229,6 +269,11 @@ public class SmartWatch
     public Player getPlayer()
     {
         return this.player;
+    }
+    
+    public GamePhase getCurrentGamePhase()
+    {
+        return this.currentGamePhase;
     }
     
     /**

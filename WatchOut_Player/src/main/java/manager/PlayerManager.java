@@ -26,6 +26,7 @@ import threads.PersistentPlayerRegistrationThread;
  */
 public class PlayerManager 
 {
+    private static final int DELAY_COORDINATION_MILLISECONDS = 60000;
     private static final String START_GAME = "START_GAME";
     private static final String STOP_GAME = "STOP_GAME";
     private static final String SERVER_HOST = "localhost";
@@ -139,7 +140,7 @@ public class PlayerManager
                     {
                         if(receivedMessage.equals(START_GAME))
                         {
-                            smartWatch.startGameCoordination();
+                            smartWatch.startGameCoordination(DELAY_COORDINATION_MILLISECONDS);
                         }
                         else if(receivedMessage.equals(STOP_GAME))
                         {
