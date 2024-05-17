@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.sun.jersey.api.client.Client;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -36,7 +37,7 @@ public class GameManager
      * used to maintain all player's historical Health rate average
      * <playerId, <timestamp, HR>>
      */
-    private HashMap<Integer, HashMap<Double, Double>> allPlayerHistoricalHrs;
+    private HashMap<Integer, HashMap<Double, ArrayList<Double>>> allPlayerHistoricalHrs;
 
     private static GameManager instance;
 
@@ -55,13 +56,13 @@ public class GameManager
         
         connectMqttBroker();
         
-        CheckToStartGameThread CheckToStart_thread = new CheckToStartGameThread(client, serverAddress, jsonSerializer, 0);
-        CheckToStopGameThread CheckToStop_thread = new CheckToStopGameThread(client, serverAddress, jsonSerializer, 0);
+        CheckToStopGameThread checkToStop_thread = new CheckToStopGameThread(client, serverAddress, jsonSerializer, 0);
+        CheckToStartGameThread checkToStart_thread = new CheckToStartGameThread(client, serverAddress, jsonSerializer, 0, checkToStop_thread);
+        
         //SendCustomMsgToPlayersThread custom_thread = new SendCustomMsgToPlayersThread("Hello, this is custom!", false, 0);
         
-        //start rest threads
-        CheckToStart_thread.start();
-        CheckToStop_thread.start();
+        //start rest thread(s)
+        checkToStart_thread.start();
         
         //start custom thread
         //custom_thread.start();
@@ -144,19 +145,24 @@ public class GameManager
         {
             for (int playerId : allPlayerHrs.keySet())
             {
-                HashMap timestampedHrs = allPlayerHrs.get(playerId);
+                HashMap<Double, ArrayList<Double>> timestampedHrs = allPlayerHrs.get(playerId);
                 
                 if (allPlayerHistoricalHrs.containsKey(playerId)) //check the two averages with respect to MinimumPlayerHRRatio_toStop
                 {
-                    HashMap historicalTimestampedHrs = this.allPlayerHistoricalHrs.get(playerId);
+                    if(timestampedHrs.isEmpty())
+                        continue;
                     
-                    double historicalHrRatio = (new ArrayList<Double>(historicalTimestampedHrs.values())
+                    HashMap<Double, ArrayList<Double>> historicalTimestampedHrs = this.allPlayerHistoricalHrs.get(playerId);
+                    
+                    double historicalHrRatio = historicalTimestampedHrs.values()
                                                 .stream()
-                                                .mapToDouble(hr -> hr).sum()) / historicalTimestampedHrs.values().size();
+                                                .flatMap(List::stream)
+                                                .mapToDouble(hr -> hr).sum() / historicalTimestampedHrs.values().size();
                     
-                    double currentHrRatio = (new ArrayList<Double>(timestampedHrs.values())
+                    double currentHrRatio = timestampedHrs.values()
                                              .stream()
-                                             .mapToDouble(hr -> hr).sum()) / timestampedHrs.values().size();
+                                             .flatMap(List::stream)
+                                             .mapToDouble(hr -> hr).sum() / timestampedHrs.values().size();
                     
                     double diffHrRatio = currentHrRatio - historicalHrRatio;
                     
