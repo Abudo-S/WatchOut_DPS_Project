@@ -58,7 +58,7 @@ public class RegistrationRestService
     {
         try
         {
-            System.out.println("Invoked getTotalPlayersNumber");
+            //System.out.println("Invoked getTotalPlayersNumber");
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
             

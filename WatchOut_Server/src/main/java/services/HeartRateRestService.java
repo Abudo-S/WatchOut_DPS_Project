@@ -21,8 +21,9 @@ public class HeartRateRestService
             //System.out.println("Invoked getPlayerAvgNHrs with playerId: " + playerId + ", n: " + n);
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
-
-            return Response.ok(new Gson().toJson(registry.getPlayerAvgNHrs(playerId, n))).build();
+            GenericRestResponse response = new GenericRestResponse(String.valueOf(registry.getPlayerAvgNHrs(playerId, n)));
+            
+            return Response.ok(new Gson().toJson(response)).build();
         }
         catch(Exception e)
         {
@@ -44,8 +45,9 @@ public class HeartRateRestService
             //System.out.println("Invoked getPlayerAvgTimestampedHrs with t1: " + ts1 + ", t2: " + ts2);
             
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
-
-            return Response.ok(new Gson().toJson(registry.getTotalAvgTimestampedHrs(ts1, ts2))).build();
+            GenericRestResponse response = new GenericRestResponse(String.valueOf(registry.getTotalAvgTimestampedHrs(ts1, ts2)));
+            
+            return Response.ok(new Gson().toJson(response)).build();
         }
         catch(Exception e)
         {
@@ -85,7 +87,7 @@ public class HeartRateRestService
     {
         try
         {
-            AddPlayerHrsRequest playerHrs = new Gson().fromJson(request.replaceAll("\\\\\"","\"").replaceAll("\"\"", "\""), AddPlayerHrsRequest.class);
+            AddPlayerHrsRequest playerHrs = new Gson().fromJson(request.replaceAll("\\\\\"","\"").replaceAll("\"[{]", "{").replaceAll("[}]\"", "}"), AddPlayerHrsRequest.class);
 
             System.out.println("Invoked addPlayerHrs with : " + playerHrs.toString());
             

@@ -62,7 +62,7 @@ public class PlayersRegistryManager
     public boolean addPlayerHR(int playerId, SimpleEntry<Double, Double> timestampedHR)
     {
         playersHR_lock.Acquire();
-        if (this.registry.containsKey(playerId))
+        if (!this.registry.containsKey(playerId))
             return false;
         
         HashMap playerTimeStampedHR = this.registry.get(playerId);
@@ -85,7 +85,7 @@ public class PlayersRegistryManager
     public boolean addPlayerHRs(int playerId, SimpleEntry<Long, ArrayList<Double>> timestampedHRs)
     {
         playersHR_lock.Acquire();
-        if (this.registry.containsKey(playerId))
+        if (!this.registry.containsKey(playerId))
             return false;
         
         HashMap playerTimeStampedHR = this.registry.get(playerId);
@@ -135,6 +135,12 @@ public class PlayersRegistryManager
         
         try
         {
+            if (!this.registry.containsKey(playerId)) 
+            {
+                System.err.println("Can't find player with playerId: " + playerId);
+                return avg;
+            }
+                
             ArrayList<Long> sortedTimeStamps;
             HashMap<Long, ArrayList<Double>> playerTimestampedHrs;
             LinkedHashMap<Long, ArrayList<Double>> orderedTimestampedHrs = new LinkedHashMap();
@@ -157,9 +163,12 @@ public class PlayersRegistryManager
                                                            .flatMap(List::stream)
                                                            .collect(Collectors.toList())
                                                            .subList(0, consideredSize);
-            avg = limitedHrs.stream()
+            if(!limitedHrs.isEmpty())
+            {
+                avg = limitedHrs.stream()
                             .mapToDouble(m -> (double)m)
                             .sum() / consideredSize;
+            }
         }
         catch (Exception e) 
         {
@@ -182,13 +191,14 @@ public class PlayersRegistryManager
         
         try
         {
-            HashMap<Long, ArrayList<Double>> timestampedHrs;
+            HashMap<Long, ArrayList<Double>> timestampedHrs = new HashMap();
             
-            //take a copy of timeStamps
+            //take a copy of all timeStamped hrs
             playersHR_lock.Acquire();
-            timestampedHrs = new HashMap((Map) this.registry.values());
+            this.registry.values()
+                         .stream()
+                         .forEach(playerTimestampedHrs -> timestampedHrs.putAll(playerTimestampedHrs));
             playersHR_lock.Release();
-            
             
             List<Double> boundedHrs = timestampedHrs.keySet()
                                                     .stream()
@@ -199,11 +209,14 @@ public class PlayersRegistryManager
                                                     .flatMap(List::stream)
                                                     .collect(Collectors.toList());
               
-            avg = boundedHrs.stream()
+            if(!boundedHrs.isEmpty())
+            {
+                avg = boundedHrs.stream()
                             .mapToDouble(m -> (double)m)
                             .sum() / boundedHrs.size();
+            }
         }
-        catch (Exception e) 
+        catch (Exception e)
         {
             System.err.println("In getPlayerAvgNHrs: " + e.getMessage());
             e.printStackTrace();
