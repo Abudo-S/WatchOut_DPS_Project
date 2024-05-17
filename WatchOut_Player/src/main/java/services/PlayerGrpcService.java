@@ -35,6 +35,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
                                                                         .setPositionX(player.getPosition()[0])
                                                                         .setPositionY(player.getPosition()[1])
                                                                         .setStatus(player.getStatus().name())
+                                                                        .setCurrentGamePhase(smartWatch.getCurrentGamePhase().name())
                                                                         .build();
 
             //send response

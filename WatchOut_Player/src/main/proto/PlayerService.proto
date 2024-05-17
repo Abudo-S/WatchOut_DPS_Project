@@ -30,6 +30,7 @@ message InformNewPlayerResponse {
     int32 positionX = 1;
 	int32 positionY = 2;
 	string status = 3;
+	string currentGamePhase = 4;
 }
 
 message GenericResultResponse {
