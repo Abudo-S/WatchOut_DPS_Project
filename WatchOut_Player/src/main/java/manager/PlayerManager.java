@@ -26,7 +26,9 @@ import threads.PersistentPlayerRegistrationThread;
  */
 public class PlayerManager 
 {
-    private static final int DELAY_COORDINATION_MILLISECONDS = 60000;
+    private static final int DELAY_COORDINATION_MILLISECONDS = 0;
+    private static final int DELAY_SEEKING_MILLISECONDS = 60000;
+    private static final int DELAY_HIDER_RUNNING_MILLISECONDS = 0;
     private static final String START_GAME = "START_GAME";
     private static final String STOP_GAME = "STOP_GAME";
     private static final String SERVER_HOST = "localhost";
@@ -86,7 +88,11 @@ public class PlayerManager
                 throw new NullPointerException("Can't get buildPlayer!");
             }
             
-            this.smartWatch = SmartWatch.getInstance(player, grpcServiceEndpoint, new CheckToSendHrAvgsThread(client, serverAddress, jsonSerializer, 0, player.getId()));
+            this.smartWatch = SmartWatch.getInstance(player, 
+                                                     grpcServiceEndpoint,
+                                                     new CheckToSendHrAvgsThread(client, serverAddress, jsonSerializer, 0, player.getId()),
+                                                     DELAY_SEEKING_MILLISECONDS,
+                                                     DELAY_HIDER_RUNNING_MILLISECONDS);
         }
         catch (Exception e)
         {
