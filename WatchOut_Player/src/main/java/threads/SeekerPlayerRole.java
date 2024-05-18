@@ -16,9 +16,9 @@ public class SeekerPlayerRole extends PlayerRoleThread
 {   
     private static final long TIMEOUT_TO_TERMINATE = 30000; //30s
     
-    public SeekerPlayerRole(String playerEndPoint, double playerSpeed)
+    public SeekerPlayerRole(String playerEndPoint, double playerSpeed, int waitMilliseconds)
     {
-        super(playerEndPoint, playerSpeed);
+        super(playerEndPoint, playerSpeed, waitMilliseconds);
         
         System.err.println("Started seeker role.");
     }

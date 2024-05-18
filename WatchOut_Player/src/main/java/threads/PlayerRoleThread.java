@@ -5,17 +5,18 @@
  */
 package threads;
 
-import manager.SmartWatch;
 
 public abstract class PlayerRoleThread extends Thread
 {
     protected String playerEndPoint;
     protected double playerSpeed;
+    protected int waitMilliseconds; //used to delay player role
     
-    public PlayerRoleThread(String playerEndPoint, double playerSpeed)
+    public PlayerRoleThread(String playerEndPoint, double playerSpeed, int waitMilliseconds)
     {
         this.playerEndPoint = playerEndPoint;
         this.playerSpeed = playerSpeed;
+        this.waitMilliseconds = waitMilliseconds;
     }
     
     public double getSpeed()

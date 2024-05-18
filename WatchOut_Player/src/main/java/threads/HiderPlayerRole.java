@@ -6,16 +6,18 @@
 package threads;
 
 import beans.Player;
+import beans.PlayerStatus;
+import beans.SharedResource;
 import manager.SmartWatch;
 
 
 public class HiderPlayerRole extends PlayerRoleThread
 {
-    private static final double TIME_TO_WAIT_OUT_HB = 10000; //10s
+    private static final int TIME_TO_WAIT_OUT_HB = 10000; //10s
     
-    public HiderPlayerRole(String playerEndPoint, double playerSpeed)
+    public HiderPlayerRole(String playerEndPoint, double playerSpeed, int waitMilliseconds)
     {
-        super(playerEndPoint, playerSpeed);
+        super(playerEndPoint, playerSpeed, waitMilliseconds);
         
         System.err.println("Started hider role.");
     }
@@ -27,30 +29,66 @@ public class HiderPlayerRole extends PlayerRoleThread
      * time = distance / speed
      */
     @Override
-    public void run()
+    public synchronized void run()
     {
         try 
         {
-            while(true)
-            {
-                //try to get a permission to move towards the H.B
-                break;
-            }
+            SmartWatch smartWatch = SmartWatch.getSubsequentInstance();
+            
+            smartWatch.AcquireSharedResource(SharedResource.HomeBase, System.currentTimeMillis());
+            
+            //wait for the PermissionAcquired() to be invoked
+            this.wait();
             //permission acquired
-            //inform changed status to Moving
             
-            Double distance = Player.getMinDistanceToHB(SmartWatch.getSubsequentInstance().getPlayer().getPosition());
+            smartWatch.AcquirePlayerLock();
+            Player currentPlayer = smartWatch.getPlayer();
+            smartWatch.ReleasePlayerLock();
             
-            //wait the time required to reach the home base
-            Thread.sleep((long) Math.ceil(distance / this.playerSpeed));
+            //check player's status then go to the H.B
+            if(currentPlayer.getStatus().equals(PlayerStatus.Active))
+            {
+                //change player's status to Moving
+                smartWatch.AcquirePlayerLock();
+                smartWatch.getPlayer().setStatus(PlayerStatus.Moving);
                 
-            //to be implemented
+                //inform changed status
+                SmartWatch.getSubsequentInstance().informPlayerChangedPositionOrStatus(smartWatch.getGrpcEndpoint(), smartWatch.getPlayer(), false);
+                smartWatch.ReleasePlayerLock();
+                
+                Double distance = Player.getMinDistanceToHB(SmartWatch.getSubsequentInstance().getPlayer().getPosition());
+            
+                //wait the time required to reach the home base
+                Thread.sleep((long) Math.ceil(distance / this.playerSpeed));
+
+                //wait the time required in the H.B. to be considered safe
+                Thread.sleep(TIME_TO_WAIT_OUT_HB);
+                
+                //change player's status to Safe
+                smartWatch.AcquirePlayerLock();
+                smartWatch.getPlayer().setStatus(PlayerStatus.Safe);
+                
+                //inform changed status
+                SmartWatch.getSubsequentInstance().informPlayerChangedPositionOrStatus(smartWatch.getGrpcEndpoint(), smartWatch.getPlayer(), false);
+                smartWatch.ReleasePlayerLock();
+                
+                //add player role's delayment
+                Thread.sleep(this.waitMilliseconds);
+            }
+            
+            //release the home base
+            smartWatch.informReleasedSharedResource(SharedResource.HomeBase);
         } 
         catch(Exception e)
         {
             System.err.println("In run: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+    
+    public synchronized void PermissionAcquired()
+    {
+        this.notify();
     }
     
 }
