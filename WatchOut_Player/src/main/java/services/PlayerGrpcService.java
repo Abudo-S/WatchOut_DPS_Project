@@ -7,6 +7,7 @@ package services;
 
 import beans.Player;
 import beans.PlayerStatus;
+import beans.SharedResource;
 import io.grpc.stub.StreamObserver;
 import manager.SmartWatch;
 
@@ -18,7 +19,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
     {
         try
         {
-            System.out.println("Invoked InformNewPlayer with request: " + request);
+            System.out.println("Invoked informNewPlayer with request: " + request);
         
             SmartWatch smartWatch = SmartWatch.getSubsequentInstance();
             Player player = smartWatch.getPlayer();
@@ -43,7 +44,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
         }
         catch (Exception e)
         {
-            System.err.println("In InformNewPlayer: " + e.getMessage());
+            System.err.println("In informNewPlayer: " + e.getMessage());
             e.printStackTrace();
         }
         finally
@@ -62,7 +63,8 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
      * @param responseObserver 
      */
     @Override
-    public void canIbeSeeker(PlayerServiceOuterClass.CanIbeSeekerRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
+    public void canIbeSeeker(PlayerServiceOuterClass.CanIbeSeekerRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver)
+    {
         try
         {
             System.out.println("Invoked canIbeSeeker with request: " + request);
@@ -114,10 +116,11 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
      * @param responseObserver 
      */
     @Override
-    public void informGameTermination(PlayerServiceOuterClass.InformGameTerminationRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
+    public void informGameTermination(PlayerServiceOuterClass.InformGameTerminationRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver)
+    {
         try
         {
-            System.out.println("Invoked InformGameTermination with request: " + request);
+            System.out.println("Invoked informGameTermination with request: " + request);
         
             System.out.println("Game terminated by player's endpoint: " + request.getSenderEndpoint());
             
@@ -131,7 +134,100 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
         }
         catch (Exception e)
         {
-            System.err.println("In InformGameTermination: " + e.getMessage());
+            System.err.println("In informGameTermination: " + e.getMessage());
+            e.printStackTrace();
+        }
+        finally
+        {
+            //indicate termination
+            responseObserver.onCompleted();
+        }
+    }
+    
+    /**
+     * invoked when otherPlayer wants to acquire a shared resource so he need the acceptance from all players. 
+     * @param request
+     * @param responseObserver 
+     */
+    @Override
+    public void acquireSharedResource(PlayerServiceOuterClass.AcquireSharedResourceRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver)
+    {
+        try
+        {
+            System.out.println("Invoked acquireSharedResource with request: " + request);
+        
+            SmartWatch smartWatch = SmartWatch.getSubsequentInstance();
+            
+            smartWatch.AcquirePlayerLock();
+            Player player = smartWatch.getPlayer();
+            smartWatch.ReleasePlayerLock();
+            
+            //if otherPlayerEndpoint belongs to a non-active player, then return false anyway.
+            player.AcquireOtherPlayerLock(request.getSenderEndpoint());
+            boolean isActivePlayer = player.getOtherPlayer(request.getSenderEndpoint()).getStatus().equals(PlayerStatus.Active);
+            player.ReleaseOtherPlayerLock(request.getSenderEndpoint());
+            
+            boolean isOk = false;
+            if(isActivePlayer)
+            {
+                smartWatch.AcquireSharedResourcesLock();
+                isOk = smartWatch.checkSharedResourceAvailability(SharedResource.valueOf(request.getSharedResourceName()),
+                                                                                         request.getPlayerId(),
+                                                                                         request.getTimestamp(),
+                                                                                         request.getSenderEndpoint());
+                smartWatch.AcquireSharedResourcesLock();
+            }
+            
+            
+            //prepare response
+            PlayerServiceOuterClass.GenericResultResponse response = PlayerServiceOuterClass.GenericResultResponse.newBuilder()
+                                                                        .setResult(isActivePlayer && isOk)
+                                                                        .build();
+
+            //send response
+            responseObserver.onNext(response);
+        }
+        catch (Exception e)
+        {
+            System.err.println("In acquireSharedResource: " + e.getMessage());
+            e.printStackTrace();
+        }
+        finally
+        {
+            //indicate termination
+            responseObserver.onCompleted();
+        }
+    }
+    
+    /**
+     * 
+     * @param request
+     * @param responseObserver 
+     */
+    @Override
+    public void informReleasedSharedResource(PlayerServiceOuterClass.InformReleasedSharedResourceRequest request, StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver)
+    {
+        try
+        {
+            System.out.println("Invoked informReleasedSharedResource with request: " + request);
+        
+            SmartWatch smartWatch = SmartWatch.getSubsequentInstance();
+            smartWatch.AcquireSharedResourcesLock();
+            smartWatch.AddSharedResourceAgreement(SharedResource.valueOf(request.getSharedResourceName()),
+                                                                         request.getSenderEndpoint());
+            smartWatch.AcquireSharedResourcesLock();
+            
+            //prepare response
+            PlayerServiceOuterClass.GenericResultResponse response = PlayerServiceOuterClass.GenericResultResponse.newBuilder()
+                                                                        .setResult(true)
+                                                                        .build();
+
+            //send response
+            responseObserver.onNext(response);
+        }
+        catch (Exception e)
+        {
+            System.err.println("In acquireSharedResource: " + e.getMessage());
             e.printStackTrace();
         }
         finally
@@ -142,7 +238,8 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
     }
     
     @Override
-    public StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest> changePositionOrStatusStream(StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver){
+    public StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest> changePositionOrStatusStream(StreamObserver<PlayerServiceOuterClass.GenericResultResponse> responseObserver)
+    {
 
         //the client will write on this stream
         return new StreamObserver<PlayerServiceOuterClass.ChangePositionOrStatusRequest>() 
@@ -167,7 +264,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
                         smartWatch.ReleasePlayerLock();
                     }
                     else //otherPlayer
-                    {
+                    {   
                         player.AcquireOtherPlayerLock(clientMessage.getTargetEndpoint());
                         Player otherPlayer = player.getOtherPlayer(clientMessage.getTargetEndpoint());
 
@@ -183,7 +280,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
                 }
                 catch (Exception e) 
                 {
-                     System.err.println("In ChangePositionOrStatusStream: " + e.getMessage());
+                     System.err.println("In changePositionOrStatusStream: " + e.getMessage());
                      e.printStackTrace();
                 }
                 finally

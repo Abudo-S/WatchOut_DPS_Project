@@ -26,6 +26,18 @@ message InformGameTerminationRequest {
 	string senderEndpoint = 1;
 }
 
+message AcquireSharedResourceRequest {
+	string senderEndpoint = 1;
+	int32 playerId = 2;
+	int64 timestamp = 3;
+	string sharedResourceName = 4;
+}
+
+message InformReleasedSharedResourceRequest {
+	string senderEndpoint = 1;
+	string sharedResourceName = 2;
+}
+
 message InformNewPlayerResponse {
     int32 positionX = 1;
 	int32 positionY = 2;
@@ -41,5 +53,7 @@ service PlayerService {
     rpc InformNewPlayer(InformNewPlayerRequest) returns (InformNewPlayerResponse);
     rpc CanIbeSeeker (CanIbeSeekerRequest) returns (GenericResultResponse);
 	rpc InformGameTermination (InformGameTerminationRequest) returns (GenericResultResponse);
+	rpc AcquireSharedResource (AcquireSharedResourceRequest) returns (GenericResultResponse);
+	rpc InformReleasedSharedResource (InformReleasedSharedResourceRequest) returns (GenericResultResponse);
     rpc ChangePositionOrStatusStream(stream ChangePositionOrStatusRequest) returns (GenericResultResponse);
 }
