@@ -40,6 +40,7 @@ public class HiderPlayerRole extends PlayerRoleThread
             //wait for the PermissionAcquired() to be invoked
             this.wait();
             //permission acquired
+            System.err.println("Home base permission acquired!");
             
             smartWatch.AcquirePlayerLock();
             Player currentPlayer = smartWatch.getPlayer();
