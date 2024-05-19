@@ -271,6 +271,7 @@ public class SmartWatch
     }
     
     /**
+     * remove the used shared resource from sharedResourcesToUse.
      * creates and starts a InformReleasedSharedResourceThread for all other players present in sharedResourceAwaiters for the same SharedResource type
      * resets sharedResource awaiters' queue.
      * @param sharedResource 
@@ -281,6 +282,9 @@ public class SmartWatch
         {
             Set<String> otherAwaitersEndPoints;
 
+            //remove the shared resource that we used
+            this.sharedResourcesToUse.remove(sharedResource);
+            
             this.playerLock.Acquire();
             //read current shared-resource awaiters endpoints
             otherAwaitersEndPoints = new HashSet(this.sharedResourceAwaiters.getOrDefault(sharedResource, new HashSet()));
@@ -308,6 +312,7 @@ public class SmartWatch
     }
     
     /**
+     * adds the desired shared resource to sharedResourcesToUse.
      * creates and starts a AcquireSharedResourceThread for all other players
      * @param sharedResource
      * @param timestamp 
@@ -319,6 +324,9 @@ public class SmartWatch
             ArrayList<AcquireSharedResourceThread> gatheredThreads = new ArrayList();
             Set<String> otherPlayersEndPoints;
 
+            //sign the shared resource that we want to use
+            this.sharedResourcesToUse.put(sharedResource, timestamp);
+            
             this.playerLock.Acquire();
             //read current otherPlayers endpoints
             otherPlayersEndPoints = new HashSet(this.player.getOtherPlayers().keySet());
@@ -343,7 +351,7 @@ public class SmartWatch
             {
                 if(gatheredThread.getAgreementResult())
                 {
-                    this.AddSharedResourceAgreement(sharedResource, gatheredThread.getRemotePlayerEndpoint());
+                    this.addSharedResourceAgreement(sharedResource, gatheredThread.getRemotePlayerEndpoint());
                 }
             }
         }
@@ -414,12 +422,7 @@ public class SmartWatch
         return false;
     }
     
-    public void AddSharedResourceToAcquire(SharedResource sharedResource, long timestamp)
-    {
-        this.sharedResourcesToUse.put(sharedResource, timestamp);
-    }
-    
-    public void AddSharedResourceAgreement(SharedResource sharedResource, String otherPlayerEndPoint)
+    public void addSharedResourceAgreement(SharedResource sharedResource, String otherPlayerEndPoint)
     {
         HashSet<String> otherPlayersAgreements = this.sharedResourcesAgreements.getOrDefault(sharedResource, new HashSet());
         otherPlayersAgreements.add(otherPlayerEndPoint);

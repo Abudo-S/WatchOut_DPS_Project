@@ -213,7 +213,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
         
             SmartWatch smartWatch = SmartWatch.getSubsequentInstance();
             smartWatch.AcquireSharedResourcesLock();
-            smartWatch.AddSharedResourceAgreement(SharedResource.valueOf(request.getSharedResourceName()),
+            smartWatch.addSharedResourceAgreement(SharedResource.valueOf(request.getSharedResourceName()),
                                                                          request.getSenderEndpoint());
             smartWatch.AcquireSharedResourcesLock();
             
