@@ -19,7 +19,7 @@ import threads.PersistentGetTotalAvgTsHrsThread;
 public class GameManager
 {
     private static final int MinimumPlayersNum_toStart = 2;
-    private static final double MinimumPlayerHRRatio_toStop = 0.05;
+    private static final double MinimumPlayerHRRatio_toStop = 0.5; //low ratio may stop the game directly after its start (ex.0.05)
     private static final String START_GAME = "START_GAME";
     private static final String STOP_GAME = "STOP_GAME";
     private static final String SERVER_HOST = "localhost";
@@ -37,7 +37,7 @@ public class GameManager
      * used to maintain all player's historical Health rate average
      * <playerId, <timestamp, HR>>
      */
-    private HashMap<Integer, HashMap<Double, ArrayList<Double>>> allPlayerHistoricalHrs;
+    private HashMap<Integer, HashMap<Long, ArrayList<Double>>> allPlayerHistoricalHrs;
 
     private static GameManager instance;
 
@@ -139,36 +139,36 @@ public class GameManager
      * @param allPlayerHrs
      * @return true if game is stopped, so this method shouldn't be called again
      */
-    public boolean checkToStop(HashMap<Integer, HashMap<Double, ArrayList<Double>>> allPlayerHrs)
+    public boolean checkToStop(HashMap<Integer, HashMap<Long, ArrayList<Double>>> allPlayerHrs)
     {
         try
         {
             for (int playerId : allPlayerHrs.keySet())
             {
-                HashMap<Double, ArrayList<Double>> timestampedHrs = allPlayerHrs.get(playerId);
+                HashMap<Long, ArrayList<Double>> timestampedHrs = allPlayerHrs.get(playerId);
                 
                 if (allPlayerHistoricalHrs.containsKey(playerId)) //check the two averages with respect to MinimumPlayerHRRatio_toStop
                 {
                     if(timestampedHrs.isEmpty())
                         continue;
                     
-                    HashMap<Double, ArrayList<Double>> historicalTimestampedHrs = this.allPlayerHistoricalHrs.get(playerId);
+                    HashMap<Long, ArrayList<Double>> historicalTimestampedHrs = this.allPlayerHistoricalHrs.get(playerId);
                     
-                    double historicalHrRatio = historicalTimestampedHrs.values()
+                    double historicalTotalHrAvg = historicalTimestampedHrs.values()
                                                 .stream()
                                                 .flatMap(List::stream)
                                                 .mapToDouble(hr -> hr).sum() / historicalTimestampedHrs.values().size();
                     
-                    double currentHrRatio = timestampedHrs.values()
+                    double currentTotalHrAvg = timestampedHrs.values()
                                              .stream()
                                              .flatMap(List::stream)
                                              .mapToDouble(hr -> hr).sum() / timestampedHrs.values().size();
                     
-                    double diffHrRatio = currentHrRatio - historicalHrRatio;
+                    double diffHrRatio = currentTotalHrAvg / (historicalTotalHrAvg * 100);
                     
                     if (diffHrRatio >= MinimumPlayerHRRatio_toStop)
                     {
-                        System.out.println("Found player: " + playerId + "historicalHrRatio: " + historicalHrRatio + ", currentHrRatio: " + currentHrRatio);
+                        System.out.println("Found player: " + playerId + ", historicalTotalHrAvg: " + historicalTotalHrAvg + ", currentTotalHrAvg: " + currentTotalHrAvg);
                         System.out.println("Found player: " + playerId + ", diffHrRatio: " + diffHrRatio);
                                 
                         //stop the game

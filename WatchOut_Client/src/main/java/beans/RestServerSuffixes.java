@@ -17,6 +17,6 @@ public final class RestServerSuffixes
     //H.R.
     public static final String GET_PLAYER_AVG_N_HRS = HEART_RATE_SERVICE + "/get_player_avg_n_hrs/{playerId}/{n}";
     public static final String GET_PLAYER_AVG_TIMESTAMPED_HRS = HEART_RATE_SERVICE + "/get_player_avg_hrs/{ts1}/{ts2}";
-    public static final String GET_PLAYERS_HRS = HEART_RATE_SERVICE + "/get_players_hrs";
+    public static final String GET_PLAYERS_HRS = HEART_RATE_SERVICE + "/get_players_hrs/{ts1}";
     
 }
