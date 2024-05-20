@@ -10,6 +10,7 @@ import beans.*;
 import com.google.gson.Gson;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
+import java.util.ArrayList;
 import java.util.HashMap;
 import manager.GameManager;
 
@@ -29,10 +30,14 @@ public class CheckToStopGameThread extends RestPeriodicThread
     {
         try
         {
+            long fromTimestamp = 0;
+            
             while (true)
             {
                 String url = this.serverAddress + RestServerSuffixes.GET_PLAYERS_HRS;
                 
+                url = url.replaceAll("\\{ts1\\}", String.valueOf(fromTimestamp));
+                        
                 //get total players number
                 ClientResponse clientResponse = this.performGetRequest(this.client, url);
                 
@@ -45,13 +50,21 @@ public class CheckToStopGameThread extends RestPeriodicThread
                 //System.out.println("CheckToStopGameThread: " + clientResponse.toString());
 
                 String response = clientResponse.getEntity(String.class);
-                HashMap allPlayersHrs = jsonSerializer.fromJson(response, AllPlayerHRsResponse.class).getAllPlayerHrs();
+                
+                if(response != null && !response.isEmpty())
+                {
+                    HashMap<Integer, HashMap<Long, ArrayList<Double>>> allPlayersHrs = jsonSerializer.fromJson(response.replaceAll("\\\\\"",""), AllPlayerHRsResponse.class).getAllPlayerHrs();
 
-                boolean result = GameManager.getInstance().checkToStop(allPlayersHrs);
+                    boolean result = GameManager.getInstance().checkToStop(allPlayersHrs);
 
-                //if game is stopped then exit
-                if(result)
-                    break;
+                    //if game is stopped then exit
+                    if(result)
+                        break;
+                    
+                    //update the start timestamp
+                    fromTimestamp = System.currentTimeMillis();
+                }
+                
                 
                 if (waitMilliseconds > 0)
                     Thread.sleep(waitMilliseconds);
