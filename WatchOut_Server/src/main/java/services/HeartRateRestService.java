@@ -38,7 +38,7 @@ public class HeartRateRestService
     @Path("get_player_avg_hrs/{ts1}/{ts2}")
     @GET
     @Produces({"application/json"})
-    public Response getPlayerAvgTimestampedHrs(@PathParam("ts1") long ts1,@PathParam("ts2") long ts2)
+    public Response getPlayerAvgTimestampedHrs(@PathParam("ts1") long ts1, @PathParam("ts2") long ts2)
     {
         try
         {
@@ -58,10 +58,10 @@ public class HeartRateRestService
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).build();
     }
     
-    @Path("get_players_hrs")
+    @Path("get_players_hrs/{ts1}")
     @GET
     @Produces({"application/json"})
-    public Response getPlayersHRs()
+    public Response getPlayersHRs(@PathParam("ts1") long ts1)
     {
         try
         {
@@ -69,7 +69,7 @@ public class HeartRateRestService
         
             PlayersRegistryManager registry = PlayersRegistryManager.getInstance();
             
-            return Response.ok(new Gson().toJson(new AllPlayerHRsResponse(registry.getAllPlayerHRs()))).build();
+            return Response.ok(new Gson().toJson(new AllPlayerHRsResponse(registry.getAllPlayerHRs(ts1)))).build();
         }
         catch(Exception e)
         {

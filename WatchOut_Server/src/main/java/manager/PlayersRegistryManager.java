@@ -118,15 +118,34 @@ public class PlayersRegistryManager
     
     /**
      * 
+     * @param fromTimstamp
      * @return all registered players HRs
      */
-    public HashMap<Integer, HashMap<Long, ArrayList<Double>>> getAllPlayerHRs()
+    public HashMap<Integer, HashMap<Long, ArrayList<Double>>> getAllPlayerHRs(long fromTimstamp)
     {
+        HashMap<Integer, HashMap<Long, ArrayList<Double>>> playersLimitedHrs = new HashMap();
+
+        //take a copy of all timeStamped hrs
         playersHR_lock.Acquire();
-        HashMap reg = this.registry;
+        this.registry.entrySet()
+                     .stream()
+                     .collect(Collectors.toMap(entry -> entry.getKey(),
+                                   entry -> new HashMap(entry.getValue()
+                                                .entrySet()
+                                                .stream()
+                                                .filter(f -> f.getKey() >= fromTimstamp)
+                                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
+                                    )
+                                )
+                            )
+                     .entrySet()
+                     .stream()
+                     .filter(f ->  !f.getValue().isEmpty())
+                     .forEach(entry -> playersLimitedHrs.put(entry.getKey(), entry.getValue()));
+
         playersHR_lock.Release();
         
-        return reg;
+        return playersLimitedHrs;
     }
     
     public double getPlayerAvgNHrs(int playerId, int n)
@@ -141,18 +160,18 @@ public class PlayersRegistryManager
                 return avg;
             }
                 
-            ArrayList<Long> sortedTimeStamps;
+            ArrayList<Long> sortedTimestamps;
             HashMap<Long, ArrayList<Double>> playerTimestampedHrs;
             LinkedHashMap<Long, ArrayList<Double>> orderedTimestampedHrs = new LinkedHashMap();
             
-            //take a copy of timeStamps
+            //take a copy of timestamps
             playersHR_lock.Acquire();
-            sortedTimeStamps = new ArrayList(this.registry.get(playerId).keySet());
+            sortedTimestamps = new ArrayList(this.registry.get(playerId).keySet());
             playerTimestampedHrs = new HashMap(this.registry.get(playerId));
             playersHR_lock.Release();
             
-            int consideredSize = ((n) > sortedTimeStamps.size())? sortedTimeStamps.size() : n;  
-            Collections.sort(sortedTimeStamps, Collections.reverseOrder());
+            int consideredSize = ((n) > sortedTimestamps.size())? sortedTimestamps.size() : n;  
+            Collections.sort(sortedTimestamps, Collections.reverseOrder());
             
             playerTimestampedHrs.keySet()
                                 .stream()
