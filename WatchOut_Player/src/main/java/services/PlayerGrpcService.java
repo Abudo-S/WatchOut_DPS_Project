@@ -175,7 +175,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
                                                                                          request.getPlayerId(),
                                                                                          request.getTimestamp(),
                                                                                          request.getSenderEndpoint());
-                smartWatch.AcquireSharedResourcesLock();
+                smartWatch.ReleaseSharedResourcesLock();
             }
             
             
@@ -215,7 +215,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
             smartWatch.AcquireSharedResourcesLock();
             smartWatch.addSharedResourceAgreement(SharedResource.valueOf(request.getSharedResourceName()),
                                                                          request.getSenderEndpoint());
-            smartWatch.AcquireSharedResourcesLock();
+            smartWatch.ReleaseSharedResourcesLock();
             
             //prepare response
             PlayerServiceOuterClass.GenericResultResponse response = PlayerServiceOuterClass.GenericResultResponse.newBuilder()

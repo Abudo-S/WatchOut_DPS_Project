@@ -85,7 +85,7 @@ public class SmartWatch
         
         HRSimulator hrSimulator_thread = new HRSimulator("Player-" + this.player.getId(), new HRSimulatorBuffer());
         monitorHrValues_thread = new MonitorHrValuesThread(0, hrSimulator_thread, checkToSendHrAvgs_thread);
-    
+        
         monitorHrValues_thread.start();
         monitorHrValues_thread.startAuxiliaryThreads();
         
@@ -180,13 +180,13 @@ public class SmartWatch
             
             //We need to wait for all threads' results to determine current player's role
             //if the player has already agreed the seeker role for another player, so the current player knows that he'll be a hider.
-            boolean resultsGathered = false;
-            while(!resultsGathered && this.isCanBeSeeker) //should be replaced by wait and notify like InformForNewEntryThread for this.informNewEntry
-            {
-                resultsGathered = !gatheredThreads.stream()
-                                                  .map(m -> m.checkIsCompleted())
-                                                  .anyMatch(m -> m.equals(false));
-            }
+//            boolean resultsGathered = false;
+//            while(!resultsGathered && this.isCanBeSeeker) //should be replaced by wait and notify like InformForNewEntryThread for this.informNewEntry
+//            {
+//                resultsGathered = !gatheredThreads.stream()
+//                                                  .map(m -> m.checkIsCompleted())
+//                                                  .anyMatch(m -> m.equals(false));
+//            } //substituted with wait and notify result-waiting logic like InformForNewEntryThread
             
             boolean finalAgreedSeeker = !gatheredThreads.stream()
                                                         .map(m -> m.getAgreementResult())
@@ -199,6 +199,14 @@ public class SmartWatch
             {
                 this.playerRole_thread = new SeekerPlayerRole(this.grpcServiceEndpoint, PLAYER_SPEED_UNITS, this.seekerWaitMilliseconds);
                 this.playerRole_thread.start(); //start seeker role
+                
+                //change player's status
+                this.AcquirePlayerLock();
+                this.player.setStatus(PlayerStatus.Seeker);
+                this.ReleasePlayerLock();
+                
+                //inform otherPlayer for the new seeker
+                this.informPlayerChangedPositionOrStatus(this.grpcServiceEndpoint, this.player, true);
             }
             else //hider
             {
@@ -317,7 +325,7 @@ public class SmartWatch
      * @param sharedResource
      * @param timestamp 
      */
-    public void AcquireSharedResource(SharedResource sharedResource, long timestamp)
+    public void acquireSharedResource(SharedResource sharedResource, long timestamp)
     {
         try 
         {
@@ -339,17 +347,18 @@ public class SmartWatch
                 gatheredThreads.add(acquireSR_thread);
             }
             
-            boolean resultsGathered = false;
-            while(!resultsGathered) //should be replaced by wait and notify like InformForNewEntryThread for this.informNewEntry
-            {
-                resultsGathered = !gatheredThreads.stream()
-                                                  .map(m -> m.checkIsCompleted())
-                                                  .anyMatch(m -> m.equals(false));
-            }
+            //wait for shared-resource result from all other players.
+//            boolean resultsGathered = false;
+//            while(!resultsGathered) //should be replaced by wait and notify like InformForNewEntryThread for this.informNewEntry
+//            {
+//                resultsGathered = !gatheredThreads.stream()
+//                                                  .map(m -> m.checkIsCompleted())
+//                                                  .anyMatch(m -> m.equals(false));
+//            }//substituted with wait and notify result-waiting logic like InformForNewEntryThread
             
             for (AcquireSharedResourceThread gatheredThread : gatheredThreads)
             {
-                if(gatheredThread.getAgreementResult())
+                if(gatheredThread.getAgreementResult()) //consider only true-valorized agreements
                 {
                     this.addSharedResourceAgreement(sharedResource, gatheredThread.getRemotePlayerEndpoint());
                 }
@@ -362,9 +371,14 @@ public class SmartWatch
         }
     }
     
+    /**
+     * stops hr buffer monitoring and sending.
+     * stop player role.
+     */
     public void stopSmartWatch()
     {
-        monitorHrValues_thread.stopMeGently();
+        this.monitorHrValues_thread.stopMeGently();
+        this.playerRole_thread.interrupt();
     }
     
     public void AcquirePlayerLock()
@@ -422,6 +436,12 @@ public class SmartWatch
         return false;
     }
     
+    
+    /**
+     * used to add another player's response who has accepted a shared-resource concession to the current player.
+     * @param sharedResource
+     * @param otherPlayerEndPoint 
+     */
     public void addSharedResourceAgreement(SharedResource sharedResource, String otherPlayerEndPoint)
     {
         HashSet<String> otherPlayersAgreements = this.sharedResourcesAgreements.getOrDefault(sharedResource, new HashSet());
@@ -434,7 +454,9 @@ public class SmartWatch
         //read current otherPlayers endpoints
         otherPlayersEndPoints = new HashSet(this.player.getOtherPlayers().keySet());
         this.playerLock.Release();
-            
+        
+        System.out.println("Granted agreement for sharedResource: " + sharedResource.toString() + ", by: " + otherPlayerEndPoint);
+        
         if(this.sharedResourcesAgreements.get(sharedResource).size() == otherPlayersEndPoints.size())
             ((HiderPlayerRole)this.playerRole_thread).PermissionAcquired();
     }

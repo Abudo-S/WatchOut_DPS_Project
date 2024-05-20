@@ -28,7 +28,7 @@ public class PlayerManager
 {
     private static final int DELAY_COORDINATION_MILLISECONDS = 0;
     private static final int DELAY_SEEKING_MILLISECONDS = 60000;
-    private static final int DELAY_HIDER_RUNNING_MILLISECONDS = 0;
+    private static final int DELAY_HIDER_IN_HB_MILLISECONDS = 0;
     private static final String START_GAME = "START_GAME";
     private static final String STOP_GAME = "STOP_GAME";
     private static final String SERVER_HOST = "localhost";
@@ -85,14 +85,14 @@ public class PlayerManager
             
             if (player == null)
             {
-                throw new NullPointerException("Can't get buildPlayer!");
+                throw new NullPointerException("Can't get builtPlayer!");
             }
             
             this.smartWatch = SmartWatch.getInstance(player, 
                                                      grpcServiceEndpoint,
                                                      new CheckToSendHrAvgsThread(client, serverAddress, jsonSerializer, 0, player.getId()),
                                                      DELAY_SEEKING_MILLISECONDS,
-                                                     DELAY_HIDER_RUNNING_MILLISECONDS);
+                                                     DELAY_HIDER_IN_HB_MILLISECONDS);
         }
         catch (Exception e)
         {
