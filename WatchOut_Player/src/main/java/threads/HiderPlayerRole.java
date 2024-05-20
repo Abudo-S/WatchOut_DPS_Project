@@ -35,10 +35,12 @@ public class HiderPlayerRole extends PlayerRoleThread
         {
             SmartWatch smartWatch = SmartWatch.getSubsequentInstance();
             
-            smartWatch.AcquireSharedResource(SharedResource.HomeBase, System.currentTimeMillis());
+            //request a permission to H.B.
+            new Thread(() -> smartWatch.acquireSharedResource(SharedResource.HomeBase, System.currentTimeMillis())).start();
             
             //wait for the PermissionAcquired() to be invoked
             this.wait();
+            
             //permission acquired
             System.err.println("Home base permission acquired!");
             
@@ -52,10 +54,10 @@ public class HiderPlayerRole extends PlayerRoleThread
                 //change player's status to Moving
                 smartWatch.AcquirePlayerLock();
                 smartWatch.getPlayer().setStatus(PlayerStatus.Moving);
+                smartWatch.ReleasePlayerLock();
                 
                 //inform changed status
-                SmartWatch.getSubsequentInstance().informPlayerChangedPositionOrStatus(smartWatch.getGrpcEndpoint(), smartWatch.getPlayer(), false);
-                smartWatch.ReleasePlayerLock();
+                smartWatch.informPlayerChangedPositionOrStatus(smartWatch.getGrpcEndpoint(), smartWatch.getPlayer(), false);
                 
                 Double distance = Player.getMinDistanceToHB(SmartWatch.getSubsequentInstance().getPlayer().getPosition());
             
@@ -68,14 +70,16 @@ public class HiderPlayerRole extends PlayerRoleThread
                 //change player's status to Safe
                 smartWatch.AcquirePlayerLock();
                 smartWatch.getPlayer().setStatus(PlayerStatus.Safe);
+                smartWatch.ReleasePlayerLock();
                 
                 //inform changed status
-                SmartWatch.getSubsequentInstance().informPlayerChangedPositionOrStatus(smartWatch.getGrpcEndpoint(), smartWatch.getPlayer(), false);
-                smartWatch.ReleasePlayerLock();
+                smartWatch.informPlayerChangedPositionOrStatus(smartWatch.getGrpcEndpoint(), smartWatch.getPlayer(), false);
                 
                 //add player role's delayment
                 Thread.sleep(this.waitMilliseconds);
             }
+            
+            System.err.println("Releasing home base!");
             
             //release the home base
             smartWatch.informReleasedSharedResource(SharedResource.HomeBase);

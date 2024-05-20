@@ -56,6 +56,9 @@ public class SeekerPlayerRole extends PlayerRoleThread
                 //wait the time required to reach the target
                 Thread.sleep(timeToReachTarget);
                 
+                //add player role's delayment
+                Thread.sleep(this.waitMilliseconds);
+                
                 Player currentPlayer = SmartWatch.getSubsequentInstance().getPlayer();
                 
                 //check if the hider is Active to change it to tagged
@@ -75,7 +78,7 @@ public class SeekerPlayerRole extends PlayerRoleThread
                 }
                 
                 currentPlayer.ReleaseOtherPlayerLock(playerDistanceToSeek.getKey());
-            } 
+            }
         }
         catch(Exception e)
         {

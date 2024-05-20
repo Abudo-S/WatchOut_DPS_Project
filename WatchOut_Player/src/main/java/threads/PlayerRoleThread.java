@@ -27,4 +27,11 @@ public abstract class PlayerRoleThread extends Thread
     @Override
     public abstract void run();
     
+    @Override
+    public void interrupt() 
+    {
+        super.interrupt();
+        
+        System.err.println("Stopped player role!");
+    }
 }
