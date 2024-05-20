@@ -7,6 +7,7 @@ package threads;
 
 import beans.SharedResource;
 import io.grpc.*;
+import manager.CustomLock;
 import services.PlayerServiceGrpc;
 import services.PlayerServiceGrpc.PlayerServiceBlockingStub;
 import services.PlayerServiceOuterClass.AcquireSharedResourceRequest;
@@ -14,13 +15,13 @@ import services.PlayerServiceOuterClass.GenericResultResponse;
 
 public class AcquireSharedResourceThread extends Thread
 {
-    private volatile boolean isCompletedSuccessfully = false;
     private String remotePlayerEndpoint;
     private String currentPlayerEndpoint;
     private SharedResource sharedResource;
     private int playerId;
     private long timestamp;
     private boolean isAgreed;
+    private CustomLock sharedResouceAgreementLock;
     
     public AcquireSharedResourceThread(String remotePlayerEndpoint, String currentPlayerEndpoint, SharedResource sharedResource, int playerId , long timestamp)
     {
@@ -29,6 +30,8 @@ public class AcquireSharedResourceThread extends Thread
         this.sharedResource = sharedResource;
         this.playerId = playerId;
         this.timestamp = timestamp;
+        this.sharedResouceAgreementLock = new CustomLock();
+        this.sharedResouceAgreementLock.Acquire(); //be sure to acquire the playerGamePhaseLock first, so the smartWatch should wait for the value.
     }
     
     @Override
@@ -50,6 +53,7 @@ public class AcquireSharedResourceThread extends Thread
 
             GenericResultResponse response = stub.acquireSharedResource(request);
             this.isAgreed = response.getResult();
+            this.sharedResouceAgreementLock.Release();
             
             //printing the answer
             System.out.println("AcquireSharedResourceThread for endpoint: " + this.remotePlayerEndpoint + ", with result: " + response.getResult());
@@ -62,17 +66,18 @@ public class AcquireSharedResourceThread extends Thread
             System.err.println("In run with remotePlayerEndpoint: " + this.remotePlayerEndpoint + ", msg: " +  e.getMessage());
             e.printStackTrace();
         }
-        
-        isCompletedSuccessfully = true;
     }
-    
-    public boolean checkIsCompleted()
-    {
-        return this.isCompletedSuccessfully;
-    }
-    
+
+    /**
+     * use customLock to get notified when the value is ready.
+     * @return 
+     */
     public boolean getAgreementResult()
     {
+        this.sharedResouceAgreementLock.Acquire();
+        //do nothing
+        this.sharedResouceAgreementLock.Release();
+        
         return this.isAgreed;
     }
     

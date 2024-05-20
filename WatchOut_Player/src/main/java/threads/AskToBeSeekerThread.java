@@ -5,8 +5,10 @@
  */
 package threads;
 
+import beans.GamePhase;
 import beans.Player;
 import io.grpc.*;
+import manager.CustomLock;
 import manager.SmartWatch;
 import services.PlayerServiceGrpc;
 import services.PlayerServiceGrpc.PlayerServiceBlockingStub;
@@ -18,10 +20,13 @@ public class AskToBeSeekerThread extends Thread
     private String remotePlayerEndpoint;
     private volatile boolean isCompletedSuccessfully = false;
     private volatile boolean agreementResult = false;
+    private CustomLock seekerAgreementLock;
     
     public AskToBeSeekerThread(String remotePlayerEndpoint)
     {
         this.remotePlayerEndpoint = remotePlayerEndpoint;
+        this.seekerAgreementLock = new CustomLock();
+        this.seekerAgreementLock.Acquire(); //be sure to acquire the seekerAgreementPhaseLock first, so the smartWatch should wait for the value.
     }
     
     @Override
@@ -47,6 +52,7 @@ public class AskToBeSeekerThread extends Thread
             GenericResultResponse response = stub.canIbeSeeker(request);
 
             this.agreementResult = response.getResult();
+            this.seekerAgreementLock.Release();
             
             //printing the answer
             //System.out.println(response.toString());
@@ -63,13 +69,21 @@ public class AskToBeSeekerThread extends Thread
         this.isCompletedSuccessfully = true;
     }
     
-    public boolean getAgreementResult()
-    {
-        return this.agreementResult;
-    }
-    
     public boolean checkIsCompleted() 
     {
         return this.isCompletedSuccessfully;
+    }
+    
+    /**
+     * use customLock to get notified when the value is ready.
+     * @return 
+     */
+    public boolean getAgreementResult()
+    {
+        this.seekerAgreementLock.Acquire();
+        //do nothing
+        this.seekerAgreementLock.Release();
+        
+        return this.agreementResult;
     }
 }
