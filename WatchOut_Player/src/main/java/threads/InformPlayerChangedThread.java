@@ -8,12 +8,17 @@ package threads;
 import beans.Player;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
-import manager.SmartWatch;
+import java.util.HashMap;
 import services.PlayerServiceGrpc;
 import services.PlayerServiceOuterClass;
 
 public class InformPlayerChangedThread extends Thread
 {
+    /**
+     * holds stream channels for all threads
+     */
+    private static HashMap<String, ManagedChannel> RemoteStreamChannels = new HashMap();
+    
     private String remotePlayerEndpoint;
     private String changedPlayerEndPoint;
     private Player changedPlayer;
@@ -25,6 +30,13 @@ public class InformPlayerChangedThread extends Thread
         this.changedPlayerEndPoint = changedPlayerEndPoint;
         this.changedPlayer = changedPlayer;
         this.isSentBySeeker = isSentBySeeker;
+        
+        //init grpc service client if not present
+        if(!RemoteStreamChannels.containsKey(this.remotePlayerEndpoint))
+        {
+            ManagedChannel channel = ManagedChannelBuilder.forTarget(this.remotePlayerEndpoint).usePlaintext().build();
+            RemoteStreamChannels.put(this.remotePlayerEndpoint, channel);
+        }
     }
     
     @Override
@@ -32,9 +44,9 @@ public class InformPlayerChangedThread extends Thread
     {
         try
         {   
-            //init grpc service client
-            final ManagedChannel channel = ManagedChannelBuilder.forTarget(remotePlayerEndpoint).usePlaintext().build();
-
+            //get remote player's relative stream channal
+            final ManagedChannel channel = RemoteStreamChannels.get(this.remotePlayerEndpoint);
+            
             PlayerServiceGrpc.PlayerServiceStub stub = PlayerServiceGrpc.newStub(channel);
 
             PlayerServiceOuterClass.ChangePositionOrStatusRequest msg = PlayerServiceOuterClass.ChangePositionOrStatusRequest.newBuilder()
@@ -49,6 +61,7 @@ public class InformPlayerChangedThread extends Thread
 
             //insert player's msg in the stream
             streamObserver.onNext(msg);
+
         }
         catch(Exception e)
         {
@@ -63,19 +76,19 @@ public class InformPlayerChangedThread extends Thread
           @Override
           public void onNext(PlayerServiceOuterClass.GenericResultResponse v) 
           {
-              System.out.println("Invoked getServerResponseObserver.onNext with result: " + v.getResult());
+              //System.out.println("Invoked InformPlayerChangedThread.getServerResponseObserver.onNext with result: " + v.getResult());
           }
 
           @Override
           public void onError(Throwable thrwbl) 
           {
-              System.out.println("Invoked getServerResponseObserver.onError with: " + thrwbl.getMessage());
+              //System.out.println("Invoked InformPlayerChangedThread.getServerResponseObserver.onError with: " + thrwbl.getMessage());
           }
 
           @Override
           public void onCompleted() 
           {
-              System.out.println("Invoked getServerResponseObserver.onCompleted!");
+              //System.out.println("Invoked InformPlayerChangedThread.getServerResponseObserver.onCompleted!");
           }
       };
       return observer;
