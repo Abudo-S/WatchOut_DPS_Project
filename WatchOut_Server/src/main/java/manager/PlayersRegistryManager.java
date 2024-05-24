@@ -18,7 +18,7 @@ public class PlayersRegistryManager
      * <playerId, <tsDuration, <HR_Avgs>>>
      */
     private volatile HashMap<Integer, HashMap<Long, ArrayList<Double>>> registry;
-    private ArrayList<Player> players;
+    private volatile ArrayList<Player> players;
 
     private static PlayersRegistryManager instance;
 
@@ -265,7 +265,7 @@ public class PlayersRegistryManager
     {
         ArrayList<Player> playerEP;
         players_lock.Acquire();
-        playerEP = this.players;
+        playerEP = new ArrayList<Player>(this.players);
         players_lock.Release();
         
         return playerEP;
