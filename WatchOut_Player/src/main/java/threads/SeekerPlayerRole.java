@@ -74,7 +74,7 @@ public class SeekerPlayerRole extends PlayerRoleThread
                     
                     currentPlayer.upsertOtherPlayer(playerDistanceToSeek.getKey(), otherPlayer);
                     
-                    System.out.println("Tagged player with endpoint: " + playerDistanceToSeek.getKey());
+                    System.err.println("Tagged player with endpoint: " + playerDistanceToSeek.getKey());
                 }
                 
                 currentPlayer.ReleaseOtherPlayerLock(playerDistanceToSeek.getKey());

@@ -27,7 +27,7 @@ import threads.PersistentPlayerRegistrationThread;
 public class PlayerManager 
 {
     private static final int DELAY_COORDINATION_MILLISECONDS = 0;
-    private static final int DELAY_SEEKING_MILLISECONDS = 60000;
+    private static final int DELAY_SEEKING_MILLISECONDS = 0;
     private static final int DELAY_HIDER_IN_HB_MILLISECONDS = 0;
     private static final String START_GAME = "START_GAME";
     private static final String STOP_GAME = "STOP_GAME";

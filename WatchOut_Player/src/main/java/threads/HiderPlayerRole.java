@@ -78,6 +78,10 @@ public class HiderPlayerRole extends PlayerRoleThread
                 //add player role's delayment
                 Thread.sleep(this.waitMilliseconds);
             }
+            else
+            {
+                System.out.println("currentPlayer status isn't equal to Active!");
+            }
             
             System.err.println("Releasing home base!");
             
