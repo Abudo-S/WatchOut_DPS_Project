@@ -34,7 +34,7 @@ public class MonitorHrValuesThread extends Thread
                 List<Measurement> measurements = this.hrSimulator_thread.getBuffer().readAllAndClean();
                 double measurementsAvg = (measurements.stream()
                                                       .mapToDouble(m -> m.getValue())
-                                                      .sum() / (double)measurements.size()) * 0.5;
+                                                      .sum() / (double)measurements.size());
                 
                 this.checkToSendHrAvgs_thread.addToReservedHrAvg(measurementsAvg);
                 

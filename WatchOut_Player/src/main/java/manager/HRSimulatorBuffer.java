@@ -13,6 +13,7 @@ import simulators.Measurement;
 public class HRSimulatorBuffer implements Buffer
 {
     private static final int WINDOW_SIZE = 8;
+    private static final int OVERLAPPING_SIZE = 4;
     private volatile List<Measurement> loadedMeasurements;
     private CustomLock loadedMeasurements_lock;
     
@@ -69,7 +70,7 @@ public class HRSimulatorBuffer implements Buffer
             bufferedMeasurements = this.loadedMeasurements.subList(0, WINDOW_SIZE);
             
             loadedMeasurements_lock.Acquire();
-            this.loadedMeasurements = this.loadedMeasurements.subList(WINDOW_SIZE, loadedMeasurements.size());
+            this.loadedMeasurements = this.loadedMeasurements.subList(WINDOW_SIZE - OVERLAPPING_SIZE, loadedMeasurements.size());
             loadedMeasurements_lock.Release();
         }
         catch(Exception e)
