@@ -127,5 +127,7 @@ public class AdminClientApp
                 }
             }
         }
+        
+        System.err.println("Exited from menu!");
     }
 }
