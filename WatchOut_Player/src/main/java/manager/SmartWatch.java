@@ -22,7 +22,7 @@ public class SmartWatch
     private String grpcServiceEndpoint; 
     private volatile Player player;
     private MonitorHrValuesThread monitorHrValues_thread;
-    private PlayerRoleThread playerRole_thread; //assigned after coordination
+    private PlayerRoleThread playerRole_thread; //assigned after coordination (main phase means that the role is assigned)
     private CustomLock playerLock;
     private int seekerWaitMilliseconds;
     private int hiderWaitMilliseconds;
@@ -62,7 +62,7 @@ public class SmartWatch
     private volatile GamePhase currentGamePhase = GamePhase.Preparation;
     
     /**
-     * it will be false when this player send seekerAgreement to another player.
+     * it will be false when this player sends seekerAgreement to another player (so implicitly this player can't be a seeker).
      * when false, it prevents sending further canIbeSeekerRequest and 
      * the current player doesn't have to wait for AskToBeSeekerThreads responses.
      */
@@ -128,11 +128,11 @@ public class SmartWatch
             if(!inMainPhase && !inPreparationPhase)
                 this.startGameCoordination(0); //partecipate in seeker coordination
             else if(!inPreparationPhase)
-            {
-                this.currentGamePhase = GamePhase.Main;
-                
+            {              
                 HiderPlayerRole hiderRole_thread = new HiderPlayerRole(this.grpcServiceEndpoint, PLAYER_SPEED_UNITS, this.hiderWaitMilliseconds);
                 hiderRole_thread.start();
+
+                this.currentGamePhase = GamePhase.Main;
             }
         }
         catch(Exception e)
@@ -157,22 +157,23 @@ public class SmartWatch
             this.currentGamePhase = GamePhase.Coordination;
             
             ArrayList<AskToBeSeekerThread> gatheredThreads = new ArrayList();
-            Set<String> otherPlayersEndPoints;
+            Map<String, Player> otherPlayers;
 
             //delay coordination
             if (waitMilliseconds > 0)
                     Thread.sleep(waitMilliseconds);
             
             this.playerLock.Acquire();
-            //read current otherPlayers endpoints
-            otherPlayersEndPoints = new HashSet(this.player.getOtherPlayers().keySet());
+            //read current otherPlayers
+            otherPlayers = new HashMap(this.player.getOtherPlayers());
             this.playerLock.Release();
 
-            for(String endpoint : otherPlayersEndPoints)
+            for(Map.Entry<String, Player> otherPlayer : otherPlayers.entrySet())
             {
-                if(this.isCanBeSeeker)
+                //[if the current player hasn't agreed on another player's seeker req.] filter only closer players to the H.B.
+                if(this.isCanBeSeeker && this.player.compareCloserDistanceToHB(otherPlayer.getValue().getPosition(), Integer.MAX_VALUE)) 
                 {
-                    AskToBeSeekerThread askToBeSeeker_thread = new AskToBeSeekerThread(endpoint);
+                    AskToBeSeekerThread askToBeSeeker_thread = new AskToBeSeekerThread(otherPlayer.getKey());
                     askToBeSeeker_thread.start();
                     gatheredThreads.add(askToBeSeeker_thread);
                 } 
@@ -186,32 +187,35 @@ public class SmartWatch
 //                resultsGathered = !gatheredThreads.stream()
 //                                                  .map(m -> m.checkIsCompleted())
 //                                                  .anyMatch(m -> m.equals(false));
-//            } //substituted with wait and notify result-waiting logic like InformForNewEntryThread
+//            } //substituted by wait and notify result-waiting logic like InformForNewEntryThread
             
             boolean finalAgreedSeeker = !gatheredThreads.stream()
                                                         .map(m -> m.getAgreementResult())
                                                         .anyMatch(m -> m.equals(false));
             
-            //since the current player knows his role so its coordination gamePhase is terminated -> Main
-            this.currentGamePhase = GamePhase.Main;
-                
-            if(finalAgreedSeeker && this.isCanBeSeeker)
-            {
-                this.playerRole_thread = new SeekerPlayerRole(this.grpcServiceEndpoint, PLAYER_SPEED_UNITS, this.seekerWaitMilliseconds);
-                this.playerRole_thread.start(); //start seeker role
-                
-                //change player's status
-                this.AcquirePlayerLock();
-                this.player.setStatus(PlayerStatus.Seeker);
-                this.ReleasePlayerLock();
-                
-                //inform otherPlayer for the new seeker
-                this.informPlayerChangedPositionOrStatus(this.grpcServiceEndpoint, this.player, true);
-            }
-            else //hider
-            {
-                this.playerRole_thread = new HiderPlayerRole(this.grpcServiceEndpoint, PLAYER_SPEED_UNITS, this.hiderWaitMilliseconds);
-                this.playerRole_thread.start(); //start hider role
+            if(this.currentGamePhase != GamePhase.Main) //if the game phase is already main then the player's role is already determined by another call
+            {     
+                if(finalAgreedSeeker && this.isCanBeSeeker)
+                {
+                    this.playerRole_thread = new SeekerPlayerRole(this.grpcServiceEndpoint, PLAYER_SPEED_UNITS, this.seekerWaitMilliseconds);
+                    this.playerRole_thread.start(); //start seeker role
+
+                    //change player's status
+                    this.AcquirePlayerLock();
+                    this.player.setStatus(PlayerStatus.Seeker);
+                    this.ReleasePlayerLock();
+
+                    //inform otherPlayer for the new seeker
+                    this.informPlayerChangedPositionOrStatus(this.grpcServiceEndpoint, this.player, true);
+                }
+                else //hider
+                {
+                    this.playerRole_thread = new HiderPlayerRole(this.grpcServiceEndpoint, PLAYER_SPEED_UNITS, this.hiderWaitMilliseconds);
+                    this.playerRole_thread.start(); //start hider role
+                }
+
+                //since the current player knows his role so its coordination gamePhase is terminated -> Main
+                this.currentGamePhase = GamePhase.Main;
             }
         }
         catch(Exception e)
@@ -354,7 +358,7 @@ public class SmartWatch
 //                resultsGathered = !gatheredThreads.stream()
 //                                                  .map(m -> m.checkIsCompleted())
 //                                                  .anyMatch(m -> m.equals(false));
-//            }//substituted with wait and notify result-waiting logic like InformForNewEntryThread
+//            }//substituted by wait and notify result-waiting logic like InformForNewEntryThread
             
             for (AcquireSharedResourceThread gatheredThread : gatheredThreads)
             {
