@@ -19,7 +19,7 @@ public class HiderPlayerRole extends PlayerRoleThread
     {
         super(playerEndPoint, playerSpeed, waitMilliseconds);
         
-        System.err.println("Started hider role.");
+        System.err.println(System.currentTimeMillis() + ":Started hider role.");
     }
 
     /**
@@ -42,7 +42,7 @@ public class HiderPlayerRole extends PlayerRoleThread
             this.wait();
             
             //permission acquired
-            System.err.println("Home base permission acquired!");
+            System.err.println(System.currentTimeMillis() + ":Home base permission acquired!");
             
             smartWatch.AcquirePlayerLock();
             Player currentPlayer = smartWatch.getPlayer();
@@ -84,7 +84,7 @@ public class HiderPlayerRole extends PlayerRoleThread
                 System.out.println("currentPlayer status isn't equal to Active!");
             }
             
-            System.err.println("Releasing home base!");
+            System.err.println(System.currentTimeMillis() + ":Releasing home base!");
             
             //release the home base
             smartWatch.informReleasedSharedResource(SharedResource.HomeBase);

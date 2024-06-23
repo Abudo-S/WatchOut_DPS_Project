@@ -20,7 +20,7 @@ public class SeekerPlayerRole extends PlayerRoleThread
     {
         super(playerEndPoint, playerSpeed, waitMilliseconds);
         
-        System.err.println("Started seeker role.");
+        System.err.println(System.currentTimeMillis() + ":Started seeker role.");
     }
 
     /**
@@ -41,7 +41,7 @@ public class SeekerPlayerRole extends PlayerRoleThread
             
                 if(playerDistanceToSeek == null)
                 {
-                    System.err.println("No player to seek is found! Asking smartWatch to terminate the game...");
+                    System.err.println(System.currentTimeMillis() + ":No player to seek is found! Asking smartWatch to terminate the game...");
                     
                     //inform game termination
                     SmartWatch.getSubsequentInstance().informGameTermination();
@@ -74,7 +74,7 @@ public class SeekerPlayerRole extends PlayerRoleThread
                     
                     currentPlayer.upsertOtherPlayer(playerDistanceToSeek.getKey(), otherPlayer);
                     
-                    System.err.println("Tagged player with endpoint: " + playerDistanceToSeek.getKey());
+                    System.err.println(System.currentTimeMillis() + ":Tagged player with endpoint: " + playerDistanceToSeek.getKey());
                 }
                 
                 currentPlayer.ReleaseOtherPlayerLock(playerDistanceToSeek.getKey());
