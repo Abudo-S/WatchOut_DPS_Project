@@ -158,9 +158,9 @@ public class Player
             double playerMinDistance = Player.getMinDistanceToHB(this.position);
             double anotherPlayerMinDistance = Player.getMinDistanceToHB(anotherPlayerPosition);
             
-            if(playerMinDistance > anotherPlayerMinDistance)
+            if(playerMinDistance < anotherPlayerMinDistance)
                 return true;
-            else if(playerMinDistance < anotherPlayerMinDistance)
+            else if(playerMinDistance > anotherPlayerMinDistance)
                 return false;
             else //==
                 return this.id > anotherPlayerId;

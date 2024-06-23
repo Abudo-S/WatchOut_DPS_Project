@@ -81,7 +81,7 @@ public class PlayerGrpcService extends PlayerServiceGrpc.PlayerServiceImplBase
             }
             else
             {
-                isAgreed = currentPlayer.compareCloserDistanceToHB(new int[] {request.getPositionX(), request.getPositionY()}, request.getPlayerId());
+                isAgreed = !currentPlayer.compareCloserDistanceToHB(new int[] {request.getPositionX(), request.getPositionY()}, request.getPlayerId());
             }
             
             if(isAgreed)
