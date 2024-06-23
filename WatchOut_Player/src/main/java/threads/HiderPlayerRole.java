@@ -67,9 +67,10 @@ public class HiderPlayerRole extends PlayerRoleThread
                 //wait the time required in the H.B. to be considered safe
                 Thread.sleep(TIME_TO_WAIT_OUT_HB);
                 
-                //change player's status to Safe
+                //change player's status to Safe and player's position as reached
                 smartWatch.AcquirePlayerLock();
                 smartWatch.getPlayer().setStatus(PlayerStatus.Safe);
+                smartWatch.getPlayer().setPositionOnReachedHB();
                 smartWatch.ReleasePlayerLock();
                 
                 //inform changed status

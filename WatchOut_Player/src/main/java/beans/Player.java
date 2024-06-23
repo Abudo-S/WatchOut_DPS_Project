@@ -115,6 +115,14 @@ public class Player
         return this.position;
     }
     
+    /**
+     * set the player's position on the first point of H.B.
+     */
+    public void setPositionOnReachedHB()
+    {
+        this.position = HomeBaseCoordinates[0];
+    }
+    
     public void AcquireOtherPlayerLock(String otherPlayerEndpoint) throws KeyException
     {
         if(!this.otherPlayersLocks.containsKey(otherPlayerEndpoint))
@@ -130,7 +138,7 @@ public class Player
         
         this.otherPlayersLocks.get(otherPlayerEndpoint).Release();
     }
-    
+     
      /**
      * essentially used by the seeker.
      * it calculates the euclidean distance between a player's position and another position.
