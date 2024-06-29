@@ -171,7 +171,8 @@ public class SmartWatch
             for(Map.Entry<String, Player> otherPlayer : otherPlayers.entrySet())
             {
                 //[if the current player hasn't agreed on another player's seeker req.] filter only closer players to the H.B.
-                if(this.isCanBeSeeker && this.player.compareCloserDistanceToHB(otherPlayer.getValue().getPosition(), Integer.MAX_VALUE)) 
+                if(this.isCanBeSeeker && !this.player.compareCloserDistanceToHB(otherPlayer.getValue().getPosition(), Integer.MAX_VALUE)) 
+                //if(this.isCanBeSeeker) //all other players
                 {
                     AskToBeSeekerThread askToBeSeeker_thread = new AskToBeSeekerThread(otherPlayer.getKey());
                     askToBeSeeker_thread.start();
