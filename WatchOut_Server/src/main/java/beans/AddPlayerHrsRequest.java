@@ -33,6 +33,6 @@ public class AddPlayerHrsRequest
     @Override
     public String toString()
     {
-        return "playerId: " + this.playerId + "timestamp: " + this.hrs.getKey() + ", hrs: " + Arrays.toString(this.hrs.getValue().toArray());
+        return "playerId: " + this.playerId + ", timestamp: " + this.hrs.getKey() + ", hrs: " + Arrays.toString(this.hrs.getValue().toArray());
     }
 }
