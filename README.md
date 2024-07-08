@@ -1,7 +1,7 @@
 1- Project Description
 
 WatchOut is a real-life game that merges modern technology with the classic
-thrill of hide-and-seek 1. Each player is provided with a smartwatch containing
+thrill of hide-and-seek. Each player is provided with a smartwatch containing
 an application (Java process) specifically designed for the game. Players’
 smartwatches coordinate to choose the hiders and the seeker (Distributed election). Moreover, since
 WatchOut is a game that requires a certain intense physical activity, the smartwatches
@@ -12,8 +12,8 @@ and intervene if needed. Figure 1 shows the overall architecture of the
 WatchOut game.
 The goal of the project is to implement the Administration Server, the Administration
 Client, and a peer-to-peer scalable system of players. The Players autonomously
-organize themselves when they need to elect a seeker and when
-they concurrently want to reach the home base (Distributed mutual exclusion). Moreover, they periodically
+organize themselves (gRPC calls/streams) when they need to elect a seeker and when
+they concurrently want to reach the home base (Distributed mutual exclusion) or in other information-exchange scenarios. Moreover, they periodically
 send heart-rate measurements to the Administration Server.
 
 ![Screenshot 2024-07-08 143021](https://github.com/Abudo-S/WatchOut_DPS_Project/assets/40835481/6ddcbda3-8307-4db6-935b-3870fdfef1db)
